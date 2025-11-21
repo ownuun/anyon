@@ -398,6 +398,13 @@ export const tasksApi = {
     });
     return handleApiResponse<void>(response);
   },
+
+  approvePlan: async (taskId: string): Promise<void> => {
+    const response = await makeRequest(`/api/tasks/${taskId}/approve-plan`, {
+      method: 'POST',
+    });
+    return handleApiResponse<void>(response);
+  },
 };
 
 // Task Attempts APIs

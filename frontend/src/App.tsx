@@ -4,9 +4,11 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from '@/i18n';
 import { Projects } from '@/pages/Projects';
 import { ProjectTasks } from '@/pages/ProjectTasks';
+import { ProjectCode } from '@/pages/ProjectCode';
 import { Organizations } from '@/pages/Organizations';
 import { ProjectDocs } from '@/pages/ProjectDocs';
 import { FullAttemptLogsPage } from '@/pages/FullAttemptLogs';
+import { Calculator } from '@/pages/Calculator';
 import { NormalLayout } from '@/components/layout/NormalLayout';
 import { usePostHog } from 'posthog-js/react';
 import { useAuth } from '@/hooks';
@@ -131,6 +133,7 @@ function AppContent() {
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/projects/:projectId" element={<Projects />} />
                 <Route path="/organizations" element={<Organizations />} />
+                <Route path="/calculator" element={<Calculator />} />
                 <Route
                   path="/projects/:projectId/tasks"
                   element={<ProjectTasks />}
@@ -138,6 +141,10 @@ function AppContent() {
                 <Route
                   path="/projects/:projectId/docs"
                   element={<ProjectDocs />}
+                />
+                <Route
+                  path="/projects/:projectId/code"
+                  element={<ProjectCode />}
                 />
                 <Route path="/settings/*" element={<SettingsLayout />}>
                   <Route index element={<Navigate to="general" replace />} />

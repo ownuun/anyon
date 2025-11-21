@@ -42,8 +42,12 @@ pub async fn respond_to_approval(
 
             // Handle ExitPlanMode approval: move to dev column and start implementation
             if context.tool_name == "ExitPlanMode" && matches!(status, ApprovalStatus::Approved) {
-                if let Err(e) = handle_exit_plan_mode_approval(&deployment, context.execution_process_id).await {
-                    tracing::error!("Failed to handle ExitPlanMode approval: {:?}", e);
+                if let Some(plan) = context.plan {
+                    if let Err(e) = handle_exit_plan_mode_approval(&deployment, context.execution_process_id, plan).await {
+                        tracing::error!("Failed to handle ExitPlanMode approval: {:?}", e);
+                    }
+                } else {
+                    tracing::error!("ExitPlanMode approved but no plan found in context");
                 }
             }
 
@@ -59,20 +63,22 @@ pub async fn respond_to_approval(
 async fn handle_exit_plan_mode_approval(
     deployment: &DeploymentImpl,
     execution_process_id: uuid::Uuid,
+    plan: String,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let pool = &deployment.db().pool;
 
     // Load execution context
     let ctx = ExecutionProcess::load_context(pool, execution_process_id).await?;
 
+    // Save the plan to the task
+    Task::update_plan(pool, ctx.task.id, Some(plan.clone())).await?;
+    tracing::info!("Saved plan for task {}", ctx.task.id);
+
     // Move task from Plan to InProgress (dev column)
     if ctx.task.status == TaskStatus::Plan {
         Task::update_status(pool, ctx.task.id, TaskStatus::InProgress).await?;
         tracing::info!("Task {} moved from Plan to InProgress", ctx.task.id);
     }
-
-    // Get the plan content from task
-    let plan = ctx.task.plan.ok_or("No plan found for task")?;
 
     // Get executor profile from the current action
     let action = ctx.execution_process.executor_action()?;

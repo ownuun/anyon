@@ -13,12 +13,18 @@ use axum::{
     routing::{delete, get, post, put},
 };
 use db::models::{
+    execution_process::{ExecutionProcess, ExecutionProcessRunReason, ExecutionProcessStatus},
+    executor_session::ExecutorSession,
     image::TaskImage,
-    task::{CreateTask, Task, TaskWithAttemptStatus, UpdateTask},
+    task::{CreateTask, Task, TaskStatus, TaskWithAttemptStatus, UpdateTask},
     task_attempt::{CreateTaskAttempt, TaskAttempt},
 };
 use deployment::Deployment;
-use executors::profile::ExecutorProfileId;
+use executors::{
+    actions::{ExecutorAction, ExecutorActionType, coding_agent_follow_up::CodingAgentFollowUpRequest},
+    profile::{ExecutorProfileId, to_default_variant},
+};
+use utils::approvals::ApprovalStatus as ApprovalStatusUtil;
 use futures_util::{SinkExt, StreamExt, TryStreamExt};
 use serde::{Deserialize, Serialize};
 use services::services::{
@@ -378,6 +384,89 @@ pub struct ShareTaskResponse {
     pub shared_task_id: Uuid,
 }
 
+pub async fn approve_plan(
+    Extension(task): Extension<Task>,
+    State(deployment): State<DeploymentImpl>,
+) -> Result<ResponseJson<ApiResponse<()>>, ApiError> {
+    let pool = &deployment.db().pool;
+
+    // Find the latest execution process for this task
+    let latest_process = ExecutionProcess::find_latest_for_task(pool, task.id)
+        .await?
+        .ok_or_else(|| ApiError::BadRequest("No execution process found for task".to_string()))?;
+
+    // Check if process is still running (plan mode should be active)
+    if latest_process.status != ExecutionProcessStatus::Running {
+        return Err(ApiError::BadRequest("No running execution process for plan approval".to_string()));
+    }
+
+    // Find pending ExitPlanMode approval
+    let approvals = deployment.approvals();
+    let (approval_id, plan) = approvals
+        .find_pending_exit_plan_mode(latest_process.id)
+        .ok_or_else(|| ApiError::BadRequest("No pending ExitPlanMode approval found".to_string()))?;
+
+    // Respond to the approval (approve it)
+    let req = utils::approvals::ApprovalResponse {
+        execution_process_id: latest_process.id,
+        status: ApprovalStatusUtil::Approved,
+    };
+    let _ = approvals.respond(pool, &approval_id, req).await
+        .map_err(|e| ApiError::BadRequest(format!("Failed to approve: {:?}", e)))?;
+
+    // Save the plan to the task
+    Task::update_plan(pool, task.id, Some(plan.clone())).await?;
+    tracing::info!("Saved plan for task {}", task.id);
+
+    // Move task to InProgress if it's in Plan status
+    if task.status == TaskStatus::Plan {
+        Task::update_status(pool, task.id, TaskStatus::InProgress).await?;
+        tracing::info!("Task {} moved from Plan to InProgress", task.id);
+    }
+
+    // Load context for starting implementation
+    let ctx = ExecutionProcess::load_context(pool, latest_process.id).await?;
+
+    // Get executor profile from the current action
+    let action = ctx.execution_process.executor_action()
+        .map_err(|e| ApiError::BadRequest(format!("Failed to get executor action: {:?}", e)))?;
+    let executor_profile_id = match action.typ() {
+        ExecutorActionType::CodingAgentInitialRequest(req) => req.executor_profile_id.clone(),
+        ExecutorActionType::CodingAgentFollowUpRequest(req) => req.executor_profile_id.clone(),
+        _ => return Err(ApiError::BadRequest("Not a coding agent action".to_string())),
+    };
+
+    // Get session ID for follow-up
+    let session = ExecutorSession::find_by_execution_process_id(pool, latest_process.id)
+        .await?
+        .ok_or_else(|| ApiError::BadRequest("No executor session found".to_string()))?;
+    let session_id = session.session_id
+        .ok_or_else(|| ApiError::BadRequest("No session ID in executor session".to_string()))?;
+
+    // Create follow-up request with the plan as prompt
+    let default_profile = to_default_variant(&executor_profile_id);
+    let follow_up = CodingAgentFollowUpRequest {
+        prompt: format!("Execute the following plan:\n\n{}", plan),
+        session_id,
+        executor_profile_id: default_profile,
+    };
+    let new_action = ExecutorAction::new(
+        ExecutorActionType::CodingAgentFollowUpRequest(follow_up),
+        action.next_action().cloned().map(Box::new),
+    );
+
+    // Start the implementation execution
+    deployment.container().start_execution(
+        &ctx.task_attempt,
+        &new_action,
+        &ExecutionProcessRunReason::CodingAgent,
+    ).await
+        .map_err(|e| ApiError::BadRequest(format!("Failed to start execution: {:?}", e)))?;
+
+    tracing::info!("Auto-approved plan and started implementation for task {}", task.id);
+    Ok(ResponseJson(ApiResponse::success(())))
+}
+
 pub async fn share_task(
     Extension(task): Extension<Task>,
     State(deployment): State<DeploymentImpl>,
@@ -409,7 +498,8 @@ pub fn router(deployment: &DeploymentImpl) -> Router<DeploymentImpl> {
     let task_actions_router = Router::new()
         .route("/", put(update_task))
         .route("/", delete(delete_task))
-        .route("/share", post(share_task));
+        .route("/share", post(share_task))
+        .route("/approve-plan", post(approve_plan));
 
     let task_id_router = Router::new()
         .route("/", get(get_task))

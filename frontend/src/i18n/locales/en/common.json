@@ -71,7 +71,9 @@
     "organizations": "Organizations",
     "tabs": {
       "documents": "Documents",
-      "development": "Development"
+      "development": "Development",
+      "kanban": "Kanban",
+      "code": "Code"
     }
   },
   "signOut": "Sign out",

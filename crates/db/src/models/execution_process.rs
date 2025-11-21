@@ -233,6 +233,26 @@ impl ExecutionProcess {
         .await
     }
 
+    /// Find the latest execution process for a task (via task_attempts)
+    pub async fn find_latest_for_task(
+        pool: &SqlitePool,
+        task_id: Uuid,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        sqlx::query_as::<_, ExecutionProcess>(
+            r#"SELECT ep.id, ep.task_attempt_id, ep.run_reason, ep.executor_action,
+                      ep.before_head_commit, ep.after_head_commit, ep.status, ep.exit_code,
+                      ep.dropped, ep.started_at, ep.completed_at, ep.created_at, ep.updated_at
+               FROM execution_processes ep
+               JOIN task_attempts ta ON ep.task_attempt_id = ta.id
+               WHERE ta.task_id = ? AND ep.dropped = FALSE
+               ORDER BY ep.created_at DESC
+               LIMIT 1"#,
+        )
+        .bind(task_id)
+        .fetch_optional(pool)
+        .await
+    }
+
     /// Find running execution processes
     pub async fn find_running(pool: &SqlitePool) -> Result<Vec<Self>, sqlx::Error> {
         sqlx::query_as!(

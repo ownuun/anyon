@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FolderOpen, Settings, LogOut, LogIn, FileText, Code, Building2, ChevronDown, Check } from 'lucide-react';
+import { FolderOpen, Settings, LogOut, LogIn, FileText, Code, Building2, ChevronDown, ChevronRight, Check, Kanban, FileCode } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,9 +17,9 @@ import { OAuthDialog } from '@/components/dialogs/global/OAuthDialog';
 import { useUserSystem } from '@/components/ConfigProvider';
 import { oauthApi, projectsApi } from '@/lib/api';
 
-const PROJECT_TABS = [
-  { label: 'sidebar.tabs.documents', icon: FileText, to: '/docs' },
-  { label: 'sidebar.tabs.development', icon: Code, to: '/tasks' },
+const DEVELOPMENT_SUB_TABS = [
+  { label: 'sidebar.tabs.kanban', icon: Kanban, to: '/tasks' },
+  { label: 'sidebar.tabs.code', icon: FileCode, to: '/code' },
 ];
 
 export function Sidebar() {
@@ -28,6 +29,10 @@ export function Sidebar() {
   const { projectId, project } = useProject();
   const { t } = useTranslation(['common']);
   const { loginStatus, reloadSystem } = useUserSystem();
+
+  // Check if development section should be expanded (when on tasks or code page)
+  const isDevelopmentActive = location.pathname.includes('/tasks') || location.pathname.includes('/code');
+  const [isDevelopmentOpen, setIsDevelopmentOpen] = useState(isDevelopmentActive);
 
   // Fetch all projects for the dropdown
   const { data: allProjects = [] } = useQuery({
@@ -44,8 +49,10 @@ export function Sidebar() {
 
   const handleProjectChange = (newProjectId: string) => {
     if (newProjectId !== projectId) {
-      // Keep the same tab (docs or tasks) when switching projects
-      const currentTab = location.pathname.includes('/docs') ? '/docs' : '/tasks';
+      // Keep the same tab (docs, tasks, or code) when switching projects
+      let currentTab = '/tasks';
+      if (location.pathname.includes('/docs')) currentTab = '/docs';
+      else if (location.pathname.includes('/code')) currentTab = '/code';
       navigate(`/projects/${newProjectId}${currentTab}`);
     }
   };
@@ -114,26 +121,64 @@ export function Sidebar() {
         {isInsideProject ? (
           // Show project tabs when inside a project
           <div className="space-y-1">
-            {PROJECT_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const fullPath = `/projects/${projectId}${tab.to}`;
-              const isActive = location.pathname.includes(tab.to);
+            {/* Documents Tab */}
+            <Link
+              to={`/projects/${projectId}/docs`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                location.pathname.includes('/docs')
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+              }`}
+            >
+              <FileText className="h-5 w-5" />
+              <span className="font-medium">{t('sidebar.tabs.documents')}</span>
+            </Link>
 
-              return (
-                <Link
-                  key={tab.to}
-                  to={fullPath}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{t(tab.label)}</span>
-                </Link>
-              );
-            })}
+            {/* Development Tab (Collapsible) */}
+            <div>
+              <button
+                onClick={() => setIsDevelopmentOpen(!isDevelopmentOpen)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isDevelopmentActive
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                }`}
+              >
+                <Code className="h-5 w-5" />
+                <span className="font-medium flex-1 text-left">{t('sidebar.tabs.development')}</span>
+                {isDevelopmentOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+
+              {/* Sub-tabs */}
+              {isDevelopmentOpen && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {DEVELOPMENT_SUB_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const fullPath = `/projects/${projectId}${tab.to}`;
+                    const isActive = location.pathname.includes(tab.to);
+
+                    return (
+                      <Link
+                        key={tab.to}
+                        to={fullPath}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                          isActive
+                            ? 'bg-accent/70 text-accent-foreground'
+                            : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="text-sm">{t(tab.label)}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Settings Link */}
             <Link

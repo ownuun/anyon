@@ -780,6 +780,16 @@ export function ProjectTasks() {
             console.error('Failed to start plan mode:', planErr);
           }
         }
+
+        // Auto-approve plan when dragging from 'plan' to 'inprogress'
+        if (task.status === 'plan' && newStatus === 'inprogress') {
+          try {
+            await tasksApi.approvePlan(draggedTaskId);
+          } catch (approveErr) {
+            // Silent fail - task status was already updated
+            console.error('Failed to auto-approve plan:', approveErr);
+          }
+        }
       } catch (err) {
         console.error('Failed to update task status:', err);
       }

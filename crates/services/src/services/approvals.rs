@@ -10,7 +10,7 @@ use db::models::{
 use executors::{
     approvals::ToolCallMetadata,
     logs::{
-        NormalizedEntry, NormalizedEntryType, ToolStatus,
+        ActionType, NormalizedEntry, NormalizedEntryType, ToolStatus,
         utils::patch::{ConversationPatch, extract_normalized_entry_from_patch},
     },
 };
@@ -40,6 +40,7 @@ type ApprovalWaiter = Shared<BoxFuture<'static, ApprovalStatus>>;
 pub struct ToolContext {
     pub tool_name: String,
     pub execution_process_id: Uuid,
+    pub plan: Option<String>,
 }
 
 #[derive(Clone)]
@@ -161,9 +162,18 @@ impl Approvals {
                 );
             }
 
+            // Extract plan from PlanPresentation action type if present
+            let plan = match &p.entry.entry_type {
+                NormalizedEntryType::ToolUse { action_type: ActionType::PlanPresentation { plan }, .. } => {
+                    Some(plan.clone())
+                }
+                _ => None,
+            };
+
             let tool_ctx = ToolContext {
                 tool_name: p.tool_name,
                 execution_process_id: p.execution_process_id,
+                plan,
             };
 
             // If approved or denied, and task is still InReview, move back to InProgress
@@ -255,6 +265,28 @@ impl Approvals {
     async fn msg_store_by_id(&self, execution_process_id: &Uuid) -> Option<Arc<MsgStore>> {
         let map = self.msg_stores.read().await;
         map.get(execution_process_id).cloned()
+    }
+
+    /// Find a pending ExitPlanMode approval for the given execution process
+    pub fn find_pending_exit_plan_mode(&self, execution_process_id: Uuid) -> Option<(String, String)> {
+        for entry in self.pending.iter() {
+            let pending = entry.value();
+            if pending.execution_process_id == execution_process_id
+                && pending.tool_name == "ExitPlanMode"
+            {
+                // Extract plan from PlanPresentation action type
+                let plan = match &pending.entry.entry_type {
+                    NormalizedEntryType::ToolUse { action_type: ActionType::PlanPresentation { plan }, .. } => {
+                        Some(plan.clone())
+                    }
+                    _ => None,
+                };
+                if let Some(plan) = plan {
+                    return Some((entry.key().clone(), plan));
+                }
+            }
+        }
+        None
     }
 }
 
