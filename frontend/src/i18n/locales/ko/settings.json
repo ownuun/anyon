@@ -375,5 +375,21 @@
         }
       }
     }
+  },
+  "dialogs": {
+    "deleteConfiguration": {
+      "title": "구성을 삭제하시겠습니까?"
+    },
+    "createConfiguration": {
+      "title": "새 구성 만들기",
+      "namePlaceholder": "예: PRODUCTION, DEVELOPMENT",
+      "selectPlaceholder": "빈 상태로 시작하거나 기존 복제",
+      "startBlank": "빈 상태로 시작"
+    }
+  },
+  "onboarding": {
+    "selectAgent": "선호하는 코딩 에이전트를 선택하세요",
+    "selectEditor": "선호하는 에디터를 선택하세요",
+    "editorCommandPlaceholder": "예: code, subl, vim"
   }
 }

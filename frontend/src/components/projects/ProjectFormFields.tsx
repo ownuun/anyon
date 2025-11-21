@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,7 @@ export function ProjectFormFields({
   projectId,
   onCreateProject,
 }: ProjectFormFieldsProps) {
+  const { t } = useTranslation('projects');
   const placeholders = useScriptPlaceholders();
 
   // Repository loading state
@@ -85,12 +87,12 @@ export function ProjectFormFields({
       const discoveredRepos = await fileSystemApi.listGitRepos();
       setAllRepos(discoveredRepos);
     } catch (err) {
-      setReposError('Failed to load repositories');
+      setReposError(t('createForm.failedToLoad'));
       console.error('Failed to load repos:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Lazy-load repositories when the user navigates to the repo list
   useEffect(() => {
@@ -117,10 +119,10 @@ export function ProjectFormFields({
                     <FolderGit className="h-5 w-5 mt-0.5 flex-shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-foreground">
-                        From Git Repository
+                        {t('createForm.fromGitRepo.title')}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Use an existing repository as your project base
+                        {t('createForm.fromGitRepo.description')}
                       </div>
                     </div>
                   </div>
@@ -138,10 +140,10 @@ export function ProjectFormFields({
                     <FolderPlus className="h-5 w-5 mt-0.5 flex-shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-foreground">
-                        Create Blank Project
+                        {t('createForm.createBlank.title')}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Start a new project from scratch
+                        {t('createForm.createBlank.description')}
                       </div>
                     </div>
                   </div>
@@ -161,7 +163,7 @@ export function ProjectFormFields({
                   }}
                 >
                   <ArrowLeft className="h-3 w-3" />
-                  Back to options
+                  {t('createForm.backToOptions')}
                 </button>
 
                 {/* Repository cards */}
@@ -201,7 +203,7 @@ export function ProjectFormFields({
                         className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
                         onClick={() => setShowMoreOptions(true)}
                       >
-                        Show {allRepos.length - 3} more repositories
+                        {t('createForm.showMore', { count: allRepos.length - 3 })}
                       </button>
                     )}
                     {showMoreOptions && allRepos.length > 3 && (
@@ -209,7 +211,7 @@ export function ProjectFormFields({
                         className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
                         onClick={() => setShowMoreOptions(false)}
                       >
-                        Show less
+                        {t('createForm.showLess')}
                       </button>
                     )}
                   </div>
@@ -221,7 +223,7 @@ export function ProjectFormFields({
                     <div className="flex items-center gap-3">
                       <div className="animate-spin h-5 w-5 border-2 border-muted-foreground border-t-transparent rounded-full"></div>
                       <div className="text-sm text-muted-foreground">
-                        Loading repositories...
+                        {t('createForm.loadingRepos')}
                       </div>
                     </div>
                   </div>
@@ -245,8 +247,8 @@ export function ProjectFormFields({
                   onClick={async () => {
                     setError('');
                     const selectedPath = await FolderPickerDialog.show({
-                      title: 'Select Git Repository',
-                      description: 'Choose an existing git repository',
+                      title: t('createForm.selectGitRepo'),
+                      description: t('createForm.chooseExistingRepo'),
                     });
                     if (selectedPath) {
                       const projectName =
@@ -261,10 +263,10 @@ export function ProjectFormFields({
                     <Search className="h-5 w-5 mt-0.5 flex-shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-foreground">
-                        Search all repos
+                        {t('createForm.searchAllRepos.title')}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Browse and select any repository on your system
+                        {t('createForm.searchAllRepos.description')}
                       </div>
                     </div>
                   </div>
@@ -293,13 +295,13 @@ export function ProjectFormFields({
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to options
+            {t('createForm.backToOptions')}
           </Button>
 
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new-project-name">
-                Project Name <span className="text-destructive">*</span>
+                {t('createForm.projectName.label')} <span className="text-destructive">{t('createForm.projectName.required')}</span>
               </Label>
               <Input
                 id="new-project-name"
@@ -316,24 +318,24 @@ export function ProjectFormFields({
                     );
                   }
                 }}
-                placeholder="My Awesome Project"
+                placeholder={t('form.placeholders.projectName')}
                 className="placeholder:text-secondary-foreground placeholder:opacity-100"
                 required
               />
               <p className="text-xs text-muted-foreground">
-                The folder name will be auto-generated from the project name
+                {t('createForm.projectName.helper')}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="parent-path">Parent Directory</Label>
+              <Label htmlFor="parent-path">{t('createForm.parentDirectory.label')}</Label>
               <div className="flex space-x-2">
                 <Input
                   id="parent-path"
                   type="text"
                   value={parentPath}
                   onChange={(e) => setParentPath(e.target.value)}
-                  placeholder="Current Directory"
+                  placeholder={t('form.placeholders.currentDirectory')}
                   className="flex-1 placeholder:text-secondary-foreground placeholder:opacity-100"
                 />
                 <Button
@@ -342,8 +344,8 @@ export function ProjectFormFields({
                   size="icon"
                   onClick={async () => {
                     const selectedPath = await FolderPickerDialog.show({
-                      title: 'Select Parent Directory',
-                      description: 'Choose where to create the new repository',
+                      title: t('createForm.parentDirectory.selectTitle'),
+                      description: t('createForm.parentDirectory.selectDescription'),
                       value: parentPath,
                     });
                     if (selectedPath) {
@@ -355,8 +357,7 @@ export function ProjectFormFields({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Leave empty to use your current working directory, or specify a
-                custom path.
+                {t('createForm.parentDirectory.helper')}
               </p>
             </div>
           </div>
@@ -366,14 +367,14 @@ export function ProjectFormFields({
       {isEditing && (
         <>
           <div className="space-y-2">
-            <Label htmlFor="git-repo-path">Git Repository Path</Label>
+            <Label htmlFor="git-repo-path">{t('createForm.gitRepoPath.label')}</Label>
             <div className="flex space-x-2">
               <Input
                 id="git-repo-path"
                 type="text"
                 value={gitRepoPath}
                 onChange={(e) => handleGitRepoPathChange(e.target.value)}
-                placeholder="/path/to/your/existing/repo"
+                placeholder={t('form.placeholders.repoPath')}
                 required
                 className="flex-1"
               />
@@ -382,8 +383,8 @@ export function ProjectFormFields({
                 variant="outline"
                 onClick={async () => {
                   const selectedPath = await FolderPickerDialog.show({
-                    title: 'Select Git Repository',
-                    description: 'Choose an existing git repository',
+                    title: t('createForm.selectGitRepo'),
+                    description: t('createForm.chooseExistingRepo'),
                     value: gitRepoPath,
                   });
                   if (selectedPath) {
@@ -397,13 +398,13 @@ export function ProjectFormFields({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Project Name</Label>
+            <Label htmlFor="name">{t('createForm.projectName.label')}</Label>
             <Input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter project name"
+              placeholder={t('form.placeholders.enterProjectName')}
               required
             />
           </div>

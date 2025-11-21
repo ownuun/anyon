@@ -39,61 +39,69 @@ function TodoPanel() {
   if (!todos || todos.length === 0) return null;
 
   return (
-    <div className="rounded-2xl bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-700/60 shadow-sm overflow-hidden">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
-      >
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          {t('todos.title', { count: todos.length })}
-        </span>
-        <ChevronDown
-          aria-hidden
-          className={cn(
-            'h-4 w-4 text-slate-400 transition-transform duration-200',
-            isOpen && 'rotate-180'
-          )}
-        />
-      </button>
+    <div className="relative">
+      {/* Collapsed header - always visible */}
+      <div className="rounded-2xl bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-700/60 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+        >
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            {t('todos.title', { count: todos.length })}
+          </span>
+          <ChevronDown
+            aria-hidden
+            className={cn(
+              'h-4 w-4 text-slate-400 transition-transform duration-200',
+              isOpen && 'rotate-180'
+            )}
+          />
+        </button>
+      </div>
 
+      {/* Expanded content - positioned above to not affect layout */}
       <div
         className={cn(
-          'overflow-hidden transition-all duration-200 ease-out',
-          isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+          'absolute bottom-full left-0 right-0 mb-1 z-50 transition-all duration-200 ease-out origin-bottom',
+          isOpen
+            ? 'opacity-100 scale-y-100 pointer-events-auto'
+            : 'opacity-0 scale-y-95 pointer-events-none'
         )}
       >
-        <div className="px-3 pb-3">
-          <ul className="space-y-1.5">
-            {todos.map((todo, index) => {
-              const s = (todo.status || '').toLowerCase();
-              const isCompleted = s === 'completed';
+        <div className="rounded-2xl bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-700/60 shadow-lg overflow-hidden max-h-[400px] overflow-y-auto">
+          <div className="px-3 py-3">
+            <ul className="space-y-1.5">
+              {todos.map((todo, index) => {
+                const s = (todo.status || '').toLowerCase();
+                const isCompleted = s === 'completed';
 
-              return (
-                <li
-                  key={`${todo.content}-${index}`}
-                  className={cn(
-                    'flex items-start gap-3 px-3 py-2.5 rounded-xl transition-all duration-150',
-                    getStatusStyle(todo.status),
-                    'hover:bg-slate-100 dark:hover:bg-slate-800/50'
-                  )}
-                >
-                  <span className="mt-0.5 flex items-center justify-center shrink-0">
-                    {getStatusIcon(todo.status)}
-                  </span>
-                  <span
+                return (
+                  <li
+                    key={`${todo.content}-${index}`}
                     className={cn(
-                      'text-sm leading-relaxed break-words',
-                      isCompleted
-                        ? 'text-slate-500 dark:text-slate-500 line-through'
-                        : 'text-slate-700 dark:text-slate-300'
+                      'flex items-start gap-3 px-3 py-2.5 rounded-xl transition-all duration-150',
+                      getStatusStyle(todo.status),
+                      'hover:bg-slate-100 dark:hover:bg-slate-800/50'
                     )}
                   >
-                    {todo.content}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+                    <span className="mt-0.5 flex items-center justify-center shrink-0">
+                      {getStatusIcon(todo.status)}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-sm leading-relaxed break-words',
+                        isCompleted
+                          ? 'text-slate-500 dark:text-slate-500 line-through'
+                          : 'text-slate-700 dark:text-slate-300'
+                      )}
+                    >
+                      {todo.content}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       </div>
     </div>

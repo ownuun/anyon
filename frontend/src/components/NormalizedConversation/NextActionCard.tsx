@@ -163,26 +163,49 @@ export function NextActionCard({
     <TooltipProvider>
       <div className="pt-4 pb-8">
         <div
-          className={`px-3 py-1 text-background flex ${failed ? 'bg-destructive' : 'bg-foreground'}`}
+          className={`rounded-xl border shadow-sm overflow-hidden ${
+            failed
+              ? 'border-destructive/30 bg-destructive/5'
+              : 'border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950'
+          }`}
         >
-          <span className="font-semibold flex-1">
-            {t('attempt.labels.summaryAndActions')}
-          </span>
-        </div>
-
-        {/* Display setup help text when setup is needed */}
-        {needsSetup && setupHelpText && (
+          {/* Header */}
           <div
-            className={`border-x border-t ${failed ? 'border-destructive' : 'border-foreground'} px-3 py-2 flex items-start gap-2`}
+            className={`px-4 py-2.5 border-b ${
+              failed
+                ? 'border-destructive/20 bg-destructive/10'
+                : 'border-slate-200/60 dark:border-slate-700/60 bg-slate-100/50 dark:bg-slate-800/50'
+            }`}
           >
-            <Settings className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span className="text-sm">{setupHelpText}</span>
+            <span
+              className={`text-sm font-medium ${
+                failed
+                  ? 'text-destructive'
+                  : 'text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {t('attempt.labels.summaryAndActions')}
+            </span>
           </div>
-        )}
 
-        <div
-          className={`border px-3 py-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 min-w-0 ${failed ? 'border-destructive' : 'border-foreground'} ${needsSetup && setupHelpText ? 'border-t-0' : ''}`}
-        >
+          {/* Display setup help text when setup is needed */}
+          {needsSetup && setupHelpText && (
+            <div
+              className={`px-4 py-3 flex items-start gap-2 border-b ${
+                failed
+                  ? 'border-destructive/20 bg-destructive/5'
+                  : 'border-slate-200/60 dark:border-slate-700/60'
+              }`}
+            >
+              <Settings className="h-4 w-4 mt-0.5 flex-shrink-0 text-slate-500" />
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                {setupHelpText}
+              </span>
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 min-w-0">
           {/* Left: Diff summary */}
           {!error && (
             <button
@@ -363,6 +386,7 @@ export function NextActionCard({
               </Tooltip>
             </div>
           )}
+          </div>
         </div>
       </div>
     </TooltipProvider>

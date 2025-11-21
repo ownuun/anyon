@@ -15,5 +15,11 @@
     "technology": {
       "title": "Technology"
     }
+  },
+  "editor": {
+    "noContentYet": "No content yet",
+    "save": "Save",
+    "delete": "Delete",
+    "placeholder": "# Start writing in markdown..."
   }
 }

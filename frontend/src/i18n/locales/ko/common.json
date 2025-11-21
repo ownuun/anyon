@@ -10,7 +10,7 @@
     "searchPlaceholder": "브랜치 검색..."
   },
   "breadcrumb": {
-    "more": "More"
+    "more": "더보기"
   },
   "buttons": {
     "cancel": "취소",
@@ -70,6 +70,8 @@
     "projects": "프로젝트",
     "organizations": "조직",
     "tabs": {
+      "planning": "기획",
+      "conversation": "대화",
       "documents": "문서",
       "development": "개발",
       "kanban": "칸반",
@@ -96,5 +98,24 @@
     "errorTitle": "인증 실패",
     "errorDescription": "계정 인증 중 문제가 발생했습니다",
     "tryAgain": "다시 시도"
+  },
+  "editor": {
+    "label": "에디터"
+  },
+  "general": {
+    "created": "생성일",
+    "noImagesAttached": "첨부된 이미지 없음",
+    "loadingHistory": "기록 로딩 중",
+    "uploading": "업로드 중..."
+  },
+  "conversation": {
+    "retryPlaceholder": "메시지를 수정하고 다시 보내세요…"
+  },
+  "folderPicker": {
+    "pathPlaceholder": "/프로젝트/경로",
+    "filterPlaceholder": "폴더 및 파일 필터링..."
+  },
+  "carousel": {
+    "nextSlide": "다음 슬라이드"
   }
 }

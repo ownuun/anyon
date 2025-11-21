@@ -375,5 +375,21 @@
         }
       }
     }
+  },
+  "dialogs": {
+    "deleteConfiguration": {
+      "title": "Delete Configuration?"
+    },
+    "createConfiguration": {
+      "title": "Create New Configuration",
+      "namePlaceholder": "e.g., PRODUCTION, DEVELOPMENT",
+      "selectPlaceholder": "Start blank or clone existing",
+      "startBlank": "Start blank"
+    }
+  },
+  "onboarding": {
+    "selectAgent": "Select your preferred coding agent",
+    "selectEditor": "Select your preferred editor",
+    "editorCommandPlaceholder": "e.g., code, subl, vim"
   }
 }

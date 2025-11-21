@@ -46,5 +46,61 @@
   "unlinkFromOrganization": "Unlink from Remote Project",
   "viewProject": "View Project",
   "openInIDE": "Open in IDE",
-  "createdDate": "Created {{date}}"
+  "createdDate": "Created {{date}}",
+  "dialogs": {
+    "createProject": {
+      "title": "Create Project",
+      "description": "Choose your repository source",
+      "creating": "Creating...",
+      "createButton": "Create Project",
+      "errorOccurred": "An error occurred"
+    }
+  },
+  "createForm": {
+    "fromGitRepo": {
+      "title": "From Git Repository",
+      "description": "Use an existing repository as your project base"
+    },
+    "createBlank": {
+      "title": "Create Blank Project",
+      "description": "Start a new project from scratch"
+    },
+    "backToOptions": "Back to options",
+    "showMore": "Show {{count}} more repositories",
+    "showLess": "Show less",
+    "loadingRepos": "Loading repositories...",
+    "failedToLoad": "Failed to load repositories",
+    "selectGitRepo": "Select Git Repository",
+    "chooseExistingRepo": "Choose an existing git repository",
+    "searchAllRepos": {
+      "title": "Search all repos",
+      "description": "Browse and select any repository on your system"
+    },
+    "projectName": {
+      "label": "Project Name",
+      "required": "*",
+      "helper": "The folder name will be auto-generated from the project name"
+    },
+    "parentDirectory": {
+      "label": "Parent Directory",
+      "helper": "Leave empty to use your current working directory, or specify a custom path.",
+      "selectTitle": "Select Parent Directory",
+      "selectDescription": "Choose where to create the new repository"
+    },
+    "gitRepoPath": {
+      "label": "Git Repository Path"
+    }
+  },
+  "form": {
+    "placeholders": {
+      "projectName": "My Awesome Project",
+      "currentDirectory": "Current Directory",
+      "repoPath": "/path/to/your/existing/repo",
+      "enterProjectName": "Enter project name"
+    }
+  },
+  "copyFiles": {
+    "placeholder": ".env,config.local.json,.local/settings.yml",
+    "startTyping": "Start typing a file path... (.env, config.local.json, .local/settings.yml)"
+  }
 }

@@ -411,5 +411,21 @@
       "continueEditing": "Continue Editing",
       "discardChanges": "Discard Changes"
     }
+  },
+  "panel": {
+    "loadingAttempt": "Loading attempt...",
+    "loadingTask": "Loading task..."
+  },
+  "deleteDialog": {
+    "title": "Delete Task"
+  },
+  "comments": {
+    "addPlaceholder": "Add a comment... (type @ to search files)",
+    "editPlaceholder": "Edit comment... (type @ to search files)"
+  },
+  "placeholders": {
+    "branch": "Branch",
+    "title": "Title*",
+    "description": "Description"
   }
 }

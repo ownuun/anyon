@@ -7,6 +7,7 @@ import { ProjectTasks } from '@/pages/ProjectTasks';
 import { ProjectCode } from '@/pages/ProjectCode';
 import { Organizations } from '@/pages/Organizations';
 import { ProjectDocs } from '@/pages/ProjectDocs';
+import { ProjectConversation } from '@/pages/ProjectConversation';
 import { FullAttemptLogsPage } from '@/pages/FullAttemptLogs';
 import { Calculator } from '@/pages/Calculator';
 import { NormalLayout } from '@/components/layout/NormalLayout';
@@ -137,6 +138,10 @@ function AppContent() {
                 <Route
                   path="/projects/:projectId/tasks"
                   element={<ProjectTasks />}
+                />
+                <Route
+                  path="/projects/:projectId/conversation"
+                  element={<ProjectConversation />}
                 />
                 <Route
                   path="/projects/:projectId/docs"

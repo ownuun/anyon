@@ -70,6 +70,8 @@
     "projects": "Projects",
     "organizations": "Organizations",
     "tabs": {
+      "planning": "Planning",
+      "conversation": "Conversation",
       "documents": "Documents",
       "development": "Development",
       "kanban": "Kanban",
@@ -96,5 +98,24 @@
     "errorTitle": "Authentication Failed",
     "errorDescription": "There was a problem authenticating your account",
     "tryAgain": "Try Again"
+  },
+  "editor": {
+    "label": "Editor"
+  },
+  "general": {
+    "created": "Created",
+    "noImagesAttached": "No images attached",
+    "loadingHistory": "Loading History",
+    "uploading": "Uploading..."
+  },
+  "conversation": {
+    "retryPlaceholder": "Edit and resend your message…"
+  },
+  "folderPicker": {
+    "pathPlaceholder": "/path/to/your/project",
+    "filterPlaceholder": "Filter folders and files..."
+  },
+  "carousel": {
+    "nextSlide": "Next slide"
   }
 }

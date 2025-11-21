@@ -15,5 +15,11 @@
     "technology": {
       "title": "기술"
     }
+  },
+  "editor": {
+    "noContentYet": "아직 내용이 없습니다",
+    "save": "저장",
+    "delete": "삭제",
+    "placeholder": "# 마크다운으로 작성을 시작하세요..."
   }
 }

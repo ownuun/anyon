@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,6 +23,7 @@ export type ProjectFormDialogResult = 'saved' | 'canceled';
 
 const ProjectFormDialogImpl = NiceModal.create<ProjectFormDialogProps>(() => {
   const modal = useModal();
+  const { t } = useTranslation('projects');
   const [name, setName] = useState('');
   const [gitRepoPath, setGitRepoPath] = useState('');
   const [error, setError] = useState('');
@@ -35,7 +37,7 @@ const ProjectFormDialogImpl = NiceModal.create<ProjectFormDialogProps>(() => {
       modal.hide();
     },
     onCreateError: (err) => {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : t('dialogs.createProject.errorOccurred'));
     },
   });
 
@@ -118,8 +120,8 @@ const ProjectFormDialogImpl = NiceModal.create<ProjectFormDialogProps>(() => {
     <Dialog open={modal.visible} onOpenChange={handleOpenChange}>
       <DialogContent className="overflow-x-hidden">
         <DialogHeader>
-          <DialogTitle>Create Project</DialogTitle>
-          <DialogDescription>Choose your repository source</DialogDescription>
+          <DialogTitle>{t('dialogs.createProject.title')}</DialogTitle>
+          <DialogDescription>{t('dialogs.createProject.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="mx-auto w-full max-w-2xl overflow-x-hidden px-1">
@@ -154,7 +156,7 @@ const ProjectFormDialogImpl = NiceModal.create<ProjectFormDialogProps>(() => {
                 disabled={createProject.isPending || !folderName.trim()}
                 className="w-full"
               >
-                {createProject.isPending ? 'Creating...' : 'Create Project'}
+                {createProject.isPending ? t('dialogs.createProject.creating') : t('dialogs.createProject.createButton')}
               </Button>
             )}
           </form>
