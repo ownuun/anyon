@@ -49,7 +49,7 @@ function FollowUpStatusRowImpl({ status, pillBgClass = 'bg-muted' }: Props) {
         ) : save.state === 'offline' ? (
           <span
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-amber-700 animate-in fade-in-0',
+              'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-warning animate-in fade-in-0',
               pillBgClass
             )}
           >
@@ -59,7 +59,7 @@ function FollowUpStatusRowImpl({ status, pillBgClass = 'bg-muted' }: Props) {
           <span
             key={sentNonce}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-emerald-700 animate-pill',
+              'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-success animate-pill',
               pillBgClass
             )}
             onAnimationEnd={() => setSentNonce(null)}
@@ -70,7 +70,7 @@ function FollowUpStatusRowImpl({ status, pillBgClass = 'bg-muted' }: Props) {
           <span
             key={savedNonce}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-emerald-700 animate-pill',
+              'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-success animate-pill',
               pillBgClass
             )}
             onAnimationEnd={() => setSavedNonce(null)}

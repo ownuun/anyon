@@ -8,7 +8,7 @@ use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
 use url::Url;
 
-const USER_AGENT: &str = "VibeKanbanRemote/1.0";
+const USER_AGENT: &str = "AnyonRemote/1.0";
 
 #[derive(Debug, Clone)]
 pub struct AuthorizationGrant {

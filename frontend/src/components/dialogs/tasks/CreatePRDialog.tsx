@@ -67,7 +67,7 @@ const CreatePRDialogImpl = NiceModal.create<CreatePRDialogProps>(
         return;
       }
 
-      setPrTitle(`${task.title} (vibe-kanban)`);
+      setPrTitle(`${task.title} (anyon)`);
       setPrBody(task.description || '');
 
       // Always fetch branches for dropdown population
@@ -302,7 +302,7 @@ const CreatePRDialogImpl = NiceModal.create<CreatePRDialogProps>(
               <Button
                 onClick={handleConfirmCreatePR}
                 disabled={creatingPR || !prTitle.trim()}
-                className="bg-blue-600 hover:bg-blue-700"
+                className=""
               >
                 {creatingPR ? (
                   <>

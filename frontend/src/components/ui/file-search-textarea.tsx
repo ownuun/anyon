@@ -485,7 +485,7 @@ export const FileSearchTextarea = forwardRef<
                           role="option"
                         >
                           <div className="flex items-center gap-2 font-medium">
-                            <TagIcon className="h-3.5 w-3.5 text-blue-600" />
+                            <TagIcon className="h-3.5 w-3.5 text-info" />
                             <span>@{tag.tag_name}</span>
                           </div>
                           {tag.content && (

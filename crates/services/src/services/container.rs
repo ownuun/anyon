@@ -586,11 +586,13 @@ pub trait ContainerService {
         run_reason: &ExecutionProcessRunReason,
     ) -> Result<ExecutionProcess, ContainerError> {
         // Update task status to InProgress when starting an attempt
+        // But keep Plan status unchanged - Plan mode execution should stay in Plan
         let task = task_attempt
             .parent_task(&self.db().pool)
             .await?
             .ok_or(SqlxError::RowNotFound)?;
         if task.status != TaskStatus::InProgress
+            && task.status != TaskStatus::Plan // Don't change Plan status
             && run_reason != &ExecutionProcessRunReason::DevServer
         {
             Task::update_status(&self.db().pool, task.id, TaskStatus::InProgress).await?;

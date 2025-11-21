@@ -354,7 +354,7 @@ export function MultiFileSearchTextarea({
                     key={file.path}
                     className={`px-3 py-2 cursor-pointer text-sm ${
                       index === selectedIndex
-                        ? 'bg-blue-50 text-blue-900'
+                        ? 'bg-accent text-accent-foreground'
                         : 'hover:bg-muted'
                     }`}
                     onClick={() => selectFile(file)}

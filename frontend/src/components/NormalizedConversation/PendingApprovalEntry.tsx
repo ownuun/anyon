@@ -149,7 +149,7 @@ function DenyReasonForm({
         onChange={onChange}
         placeholder="Let the agent know why this request was denied... Type @ to insert tags or search files."
         disabled={isResponding}
-        className="w-full bg-transparent border px-3 py-2 text-sm resize-none min-h-[80px] focus-visible:outline-none"
+        className="w-full bg-transparent border rounded-md px-3 py-2 text-sm resize-none min-h-[80px] focus-visible:outline-none"
         projectId={projectId}
       />
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
@@ -324,7 +324,7 @@ const PendingApprovalEntry = ({
 
   return (
     <div className="relative mt-3">
-      <div className="overflow-hidden border">
+      <div className="overflow-hidden border rounded-lg">
         {children}
 
         <div className="border-t bg-background px-2 py-1.5 text-xs sm:text-sm">
@@ -349,7 +349,7 @@ const PendingApprovalEntry = ({
 
             {error && (
               <div
-                className="mt-1 text-xs text-red-600"
+                className="mt-1 text-xs text-destructive"
                 role="alert"
                 aria-live="polite"
               >

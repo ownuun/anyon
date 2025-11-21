@@ -93,8 +93,8 @@ function EditDiffRenderer({
 
   const headerClass = cn(
     'flex items-center gap-1.5 text-secondary-foreground',
-    statusAppearance === 'denied' && 'text-red-700 dark:text-red-300',
-    statusAppearance === 'timed_out' && 'text-amber-700 dark:text-amber-200'
+    statusAppearance === 'denied' && 'text-destructive',
+    statusAppearance === 'timed_out' && 'text-warning'
   );
 
   return (
@@ -116,7 +116,7 @@ function EditDiffRenderer({
       </div>
 
       {effectiveExpanded && (
-        <div className={'mt-2 border ' + hideLineNumbersClass}>
+        <div className={'mt-2 border rounded-lg overflow-hidden ' + hideLineNumbersClass}>
           {isValidDiff ? (
             <DiffView
               data={diffData}

@@ -156,7 +156,7 @@ const RestoreLogsDialogImpl = NiceModal.create<RestoreLogsDialogProps>(
                         ? 'flex items-start gap-3 rounded-md border p-3'
                         : hasRisk
                           ? 'flex items-start gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-3'
-                          : 'flex items-start gap-3 rounded-md border p-3 border-amber-300/60 bg-amber-50/70 dark:border-amber-400/30 dark:bg-amber-900/20'
+                          : 'flex items-start gap-3 rounded-md border p-3 border-warning/30 bg-warning/10'
                     }
                   >
                     <AlertTriangle
@@ -165,7 +165,7 @@ const RestoreLogsDialogImpl = NiceModal.create<RestoreLogsDialogProps>(
                           ? 'h-4 w-4 text-muted-foreground mt-0.5'
                           : hasRisk
                             ? 'h-4 w-4 text-destructive mt-0.5'
-                            : 'h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5'
+                            : 'h-4 w-4 text-warning mt-0.5'
                       }
                     />
                     <div className="text-sm min-w-0 w-full break-words">
@@ -183,7 +183,7 @@ const RestoreLogsDialogImpl = NiceModal.create<RestoreLogsDialogProps>(
                           <span
                             className={
                               (worktreeResetOn
-                                ? 'bg-emerald-500'
+                                ? 'bg-success'
                                 : 'bg-muted-foreground/30') +
                               ' absolute inset-0 rounded-full transition-colors'
                             }
@@ -287,7 +287,7 @@ const RestoreLogsDialogImpl = NiceModal.create<RestoreLogsDialogProps>(
                           <span
                             className={
                               (worktreeResetOn && forceReset
-                                ? 'bg-emerald-500'
+                                ? 'bg-success'
                                 : 'bg-muted-foreground/30') +
                               ' absolute inset-0 rounded-full transition-colors'
                             }

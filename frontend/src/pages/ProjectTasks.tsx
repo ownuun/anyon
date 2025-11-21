@@ -5,12 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertTriangle, Plus, X } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
-import { tasksApi } from '@/lib/api';
+import { tasksApi, attemptsApi } from '@/lib/api';
 import type { GitBranch, TaskAttempt, BranchStatus } from 'shared/types';
 import { openTaskForm } from '@/lib/openTaskForm';
-import { FeatureShowcaseDialog } from '@/components/dialogs/global/FeatureShowcaseDialog';
-import { showcases } from '@/config/showcases';
-import { useUserSystem } from '@/components/ConfigProvider';
 import { usePostHog } from 'posthog-js/react';
 
 import { useSearch } from '@/contexts/SearchContext';
@@ -19,6 +16,7 @@ import { useTaskAttempts } from '@/hooks/useTaskAttempts';
 import { useTaskAttempt } from '@/hooks/useTaskAttempt';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useBranchStatus, useAttemptExecution } from '@/hooks';
+import { useUserSystem } from '@/components/ConfigProvider';
 import { projectsApi } from '@/lib/api';
 import { paths } from '@/lib/paths';
 import { ExecutionProcessesProvider } from '@/contexts/ExecutionProcessesContext';
@@ -78,6 +76,7 @@ type Task = TaskWithAttemptStatus;
 
 const TASK_STATUSES = [
   'todo',
+  'plan',
   'inprogress',
   'inreview',
   'done',
@@ -157,6 +156,8 @@ export function ProjectTasks() {
     error: projectError,
   } = useProject();
 
+  const { config } = useUserSystem();
+
   useEffect(() => {
     enableScope(Scope.KANBAN);
 
@@ -200,35 +201,6 @@ export function ProjectTasks() {
   const isTaskPanelOpen = Boolean(taskId && selectedTask);
   const isSharedPanelOpen = Boolean(selectedSharedTask);
   const isPanelOpen = isTaskPanelOpen || isSharedPanelOpen;
-
-  const { config, updateAndSaveConfig, loading } = useUserSystem();
-
-  const isLoaded = !loading;
-  const showcaseId = showcases.taskPanel.id;
-  const seenFeatures = useMemo(
-    () => config?.showcases?.seen_features ?? [],
-    [config?.showcases?.seen_features]
-  );
-  const seen = isLoaded && seenFeatures.includes(showcaseId);
-
-  useEffect(() => {
-    if (!isLoaded || !isPanelOpen || seen) return;
-
-    FeatureShowcaseDialog.show({ config: showcases.taskPanel }).finally(() => {
-      FeatureShowcaseDialog.hide();
-      if (seenFeatures.includes(showcaseId)) return;
-      void updateAndSaveConfig({
-        showcases: { seen_features: [...seenFeatures, showcaseId] },
-      });
-    });
-  }, [
-    isLoaded,
-    isPanelOpen,
-    seen,
-    showcaseId,
-    updateAndSaveConfig,
-    seenFeatures,
-  ]);
 
   const isLatest = attemptId === 'latest';
   const { data: attempts = [], isLoading: isAttemptsLoading } = useTaskAttempts(
@@ -376,6 +348,7 @@ export function ProjectTasks() {
   const kanbanColumns = useMemo(() => {
     const columns: Record<TaskStatus, KanbanColumnItem[]> = {
       todo: [],
+      plan: [],
       inprogress: [],
       inreview: [],
       done: [],
@@ -471,6 +444,7 @@ export function ProjectTasks() {
   const visibleTasksByStatus = useMemo(() => {
     const map: Record<TaskStatus, Task[]> = {
       todo: [],
+      plan: [],
       inprogress: [],
       inreview: [],
       done: [],
@@ -782,11 +756,35 @@ export function ProjectTasks() {
           parent_task_attempt: task.parent_task_attempt,
           image_ids: null,
         });
+
+        // Auto-start plan mode when dragging to 'plan' status
+        if (newStatus === 'plan' && config?.executor_profile) {
+          const currentBranch = branches.find((b) => b.is_current)?.name;
+          const baseBranch = currentBranch || 'main';
+
+          try {
+            const attempt = await attemptsApi.create({
+              task_id: draggedTaskId,
+              executor_profile_id: {
+                executor: config.executor_profile.executor,
+                variant: 'PLAN', // Use PLAN variant for plan mode
+              },
+              base_branch: baseBranch,
+            });
+
+            // Navigate to the attempt
+            if (projectId) {
+              navigate(paths.attempt(projectId, draggedTaskId, attempt.id));
+            }
+          } catch (planErr) {
+            console.error('Failed to start plan mode:', planErr);
+          }
+        }
       } catch (err) {
         console.error('Failed to update task status:', err);
       }
     },
-    [tasksById]
+    [tasksById, config, branches, projectId, navigate]
   );
 
   const getSharedTask = useCallback(
@@ -843,41 +841,63 @@ export function ProjectTasks() {
       : `${truncated}...`;
   };
 
+  const kanbanHeader = (
+    <div className="flex justify-between items-center p-8 pb-4">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">{t('header.title')}</h1>
+        <p className="text-muted-foreground">{t('header.description')}</p>
+      </div>
+      <Button onClick={handleCreateNewTask}>
+        <Plus className="mr-2 h-4 w-4" />
+        {t('actions.addTask')}
+      </Button>
+    </div>
+  );
+
   const kanbanContent =
     tasks.length === 0 && !hasSharedTasks ? (
-      <div className="max-w-7xl mx-auto mt-8">
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">{t('empty.noTasks')}</p>
-            <Button className="mt-4" onClick={handleCreateNewTask}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('empty.createFirst')}
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="h-full flex flex-col">
+        {kanbanHeader}
+        <div className="max-w-7xl mx-auto mt-8 px-4">
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">{t('empty.noTasks')}</p>
+              <Button className="mt-4" onClick={handleCreateNewTask}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t('empty.createFirst')}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     ) : !hasVisibleLocalTasks && !hasVisibleSharedTasks ? (
-      <div className="max-w-7xl mx-auto mt-8">
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-muted-foreground">
-              {t('empty.noSearchResults')}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="h-full flex flex-col">
+        {kanbanHeader}
+        <div className="max-w-7xl mx-auto mt-8 px-4">
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">
+                {t('empty.noSearchResults')}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     ) : (
-      <div className="w-full h-full overflow-x-auto overflow-y-auto overscroll-x-contain">
-        <TaskKanbanBoard
-          columns={kanbanColumns}
-          onDragEnd={handleDragEnd}
-          onViewTaskDetails={handleViewTaskDetails}
-          onViewSharedTask={handleViewSharedTask}
-          selectedTaskId={selectedTask?.id}
-          selectedSharedTaskId={selectedSharedTaskId}
-          onCreateTask={handleCreateNewTask}
-          projectId={projectId!}
-        />
+      <div className="w-full h-full flex flex-col">
+        {kanbanHeader}
+        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto overscroll-x-contain">
+          <TaskKanbanBoard
+            columns={kanbanColumns}
+            onDragEnd={handleDragEnd}
+            onViewTaskDetails={handleViewTaskDetails}
+            onViewSharedTask={handleViewSharedTask}
+            selectedTaskId={selectedTask?.id}
+            selectedSharedTaskId={selectedSharedTaskId}
+            onCreateTask={handleCreateNewTask}
+            projectId={projectId!}
+          />
+        </div>
       </div>
     );
 

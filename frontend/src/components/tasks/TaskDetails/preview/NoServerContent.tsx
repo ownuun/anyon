@@ -284,10 +284,10 @@ export function NoServerContent({
               </Button>
               <div>
                 <a
-                  href="https://github.com/BloopAI/vibe-kanban-web-companion"
+                  href="https://github.com/SlitAI/anyon-web-companion"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className="inline-flex items-center gap-1 text-sm text-info hover:underline"
                 >
                   <ExternalLink className="h-3 w-3" />
                   {t('preview.noServer.companionLink')}

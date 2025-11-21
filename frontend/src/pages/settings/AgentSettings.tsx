@@ -382,13 +382,13 @@ export function AgentSettings() {
         </Alert>
       )}
 
+      {/* Editor Mode Selection Card */}
       <Card>
         <CardHeader>
           <CardTitle>{t('settings.agents.title')}</CardTitle>
           <CardDescription>{t('settings.agents.description')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Editor type toggle */}
+        <CardContent>
           <div className="flex items-center space-x-2">
             <Checkbox
               id="use-form-editor"
@@ -396,17 +396,35 @@ export function AgentSettings() {
               onCheckedChange={(checked) => setUseFormEditor(!checked)}
               disabled={profilesLoading || !localParsedProfiles}
             />
-            <Label htmlFor="use-form-editor">
+            <Label htmlFor="use-form-editor" className="cursor-pointer">
               {t('settings.agents.editor.formLabel')}
             </Label>
           </div>
+        </CardContent>
+      </Card>
 
+      {/* Agent Configuration Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {useFormEditor
+              ? t('settings.agents.editor.configTitle', { defaultValue: 'Agent Configuration' })
+              : t('settings.agents.editor.jsonTitle', { defaultValue: 'JSON Editor' })}
+          </CardTitle>
+          <CardDescription>
+            {useFormEditor
+              ? t('settings.agents.editor.configDescription', { defaultValue: 'Select an agent and configuration to edit settings.' })
+              : t('settings.agents.editor.jsonDescription', { defaultValue: 'Edit the raw profiles JSON directly.' })}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
           {useFormEditor &&
           localParsedProfiles &&
           localParsedProfiles.executors ? (
             // Form-based editor
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <>
+              {/* Executor and Configuration Selectors */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="executor-type">
                     {t('settings.agents.editor.agentLabel')}
@@ -415,7 +433,6 @@ export function AgentSettings() {
                     value={selectedExecutorType}
                     onValueChange={(value) => {
                       setSelectedExecutorType(value as BaseCodingAgent);
-                      // Reset configuration selection when executor type changes
                       setSelectedConfiguration('DEFAULT');
                     }}
                   >
@@ -456,7 +473,7 @@ export function AgentSettings() {
                         !localParsedProfiles.executors[selectedExecutorType]
                       }
                     >
-                      <SelectTrigger id="configuration">
+                      <SelectTrigger id="configuration" className="flex-1">
                         <SelectValue
                           placeholder={t(
                             'settings.agents.editor.configPlaceholder'
@@ -479,8 +496,8 @@ export function AgentSettings() {
                     </Select>
                     <Button
                       variant="destructive"
-                      size="sm"
-                      className="h-10"
+                      size="icon"
+                      className="h-10 w-10 shrink-0"
                       onClick={() => openDeleteDialog(selectedConfiguration)}
                       disabled={
                         profilesSaving ||
@@ -507,6 +524,7 @@ export function AgentSettings() {
                 </div>
               </div>
 
+              {/* Configuration Form */}
               {(() => {
                 const executorsMap =
                   localParsedProfiles.executors as unknown as ExecutorsMap;
@@ -537,7 +555,7 @@ export function AgentSettings() {
                   )
                 );
               })()}
-            </div>
+            </>
           ) : (
             // Raw JSON editor
             <div className="space-y-4">
@@ -555,12 +573,12 @@ export function AgentSettings() {
                   }
                   onChange={handleProfilesChange}
                   disabled={profilesLoading}
-                  minHeight={300}
+                  minHeight={400}
                 />
               </div>
 
               {!profilesError && profilesPath && (
-                <div className="space-y-2">
+                <div className="pt-2">
                   <p className="text-sm text-muted-foreground">
                     <span className="font-medium">
                       {t('settings.agents.editor.pathLabel')}

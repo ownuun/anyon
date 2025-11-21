@@ -4,6 +4,8 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from '@/i18n';
 import { Projects } from '@/pages/Projects';
 import { ProjectTasks } from '@/pages/ProjectTasks';
+import { Organizations } from '@/pages/Organizations';
+import { ProjectDocs } from '@/pages/ProjectDocs';
 import { FullAttemptLogsPage } from '@/pages/FullAttemptLogs';
 import { NormalLayout } from '@/components/layout/NormalLayout';
 import { usePostHog } from 'posthog-js/react';
@@ -33,6 +35,7 @@ import { OnboardingDialog } from '@/components/dialogs/global/OnboardingDialog';
 import { ReleaseNotesDialog } from '@/components/dialogs/global/ReleaseNotesDialog';
 import { ClickedElementsProvider } from './contexts/ClickedElementsProvider';
 import NiceModal from '@ebay/nice-modal-react';
+import { Toaster } from 'sonner';
 
 const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes);
 
@@ -127,9 +130,14 @@ function AppContent() {
                 <Route path="/" element={<Projects />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/projects/:projectId" element={<Projects />} />
+                <Route path="/organizations" element={<Organizations />} />
                 <Route
                   path="/projects/:projectId/tasks"
                   element={<ProjectTasks />}
+                />
+                <Route
+                  path="/projects/:projectId/docs"
+                  element={<ProjectDocs />}
                 />
                 <Route path="/settings/*" element={<SettingsLayout />}>
                   <Route index element={<Navigate to="general" replace />} />
@@ -172,6 +180,7 @@ function App() {
             <HotkeysProvider initiallyActiveScopes={['*', 'global', 'kanban']}>
               <NiceModal.Provider>
                 <AppContent />
+                <Toaster position="bottom-right" richColors />
               </NiceModal.Provider>
             </HotkeysProvider>
           </ProjectProvider>

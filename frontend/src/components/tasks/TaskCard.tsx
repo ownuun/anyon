@@ -108,10 +108,10 @@ export function TaskCard({
           right={
             <>
               {task.has_in_progress_attempt && (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <Loader2 className="h-4 w-4 animate-spin text-info" />
               )}
               {task.has_merged_attempt && (
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-success" />
               )}
               {task.last_attempt_failed && !task.has_merged_attempt && (
                 <XCircle className="h-4 w-4 text-destructive" />

@@ -151,7 +151,7 @@ function MarkdownRenderer({
         component: ({ children, ...props }: React.ComponentProps<'h1'>) => (
           <h1
             {...props}
-            className="text-lg font-medium leading-tight mt-4 mb-2"
+            className="text-2xl font-bold leading-tight mt-6 mb-3"
           >
             {children}
           </h1>
@@ -161,7 +161,7 @@ function MarkdownRenderer({
         component: ({ children, ...props }: React.ComponentProps<'h2'>) => (
           <h2
             {...props}
-            className="text-base font-medium leading-tight mt-4 mb-2"
+            className="text-xl font-semibold leading-tight mt-5 mb-2"
           >
             {children}
           </h2>
@@ -169,7 +169,7 @@ function MarkdownRenderer({
       },
       h3: {
         component: ({ children, ...props }: React.ComponentProps<'h3'>) => (
-          <h3 {...props} className="text-sm leading-tight mt-3 mb-2">
+          <h3 {...props} className="text-lg font-medium leading-tight mt-4 mb-2">
             {children}
           </h3>
         ),
@@ -245,14 +245,14 @@ function MarkdownRenderer({
                       className="pointer-events-auto opacity-0 group-hover:opacity-100 delay-0 transition-opacity duration-50 h-8 w-8 rounded-md bg-background/95 backdrop-blur border border-border shadow-sm"
                     >
                       {copied ? (
-                        <Check className="h-4 w-4 text-green-600" />
+                        <Check className="h-4 w-4 text-success" />
                       ) : (
                         <Clipboard className="h-4 w-4" />
                       )}
                     </Button>
                     {copied && (
                       <div
-                        className="absolute -right-1 mt-1 translate-y-1.5 select-none text-[11px] leading-none px-2 py-1 rounded bg-green-600 text-white shadow pointer-events-none"
+                        className="absolute -right-1 mt-1 translate-y-1.5 select-none text-[11px] leading-none px-2 py-1 rounded bg-success text-success-foreground shadow pointer-events-none"
                         role="status"
                         aria-live="polite"
                       >

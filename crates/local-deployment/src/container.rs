@@ -30,7 +30,7 @@ use executors::{
     approvals::{ExecutorApprovalService, NoopExecutorApprovalService},
     executors::BaseCodingAgent,
     logs::{
-        NormalizedEntryType,
+        ActionType, NormalizedEntryType,
         utils::{
             ConversationPatch,
             patch::{escape_json_pointer_segment, extract_normalized_entry_from_patch},
@@ -133,26 +133,36 @@ impl LocalContainerService {
     }
 
     /// Finalize task execution by updating status to InReview and sending notifications
+    /// Tasks in Plan status stay in Plan (plan mode execution doesn't change status)
     async fn finalize_task(
         db: &DBService,
         config: &Arc<RwLock<Config>>,
         share: &Result<SharePublisher, RemoteClientNotConfigured>,
         ctx: &ExecutionContext,
     ) {
-        match Task::update_status(&db.pool, ctx.task.id, TaskStatus::InReview).await {
-            Ok(_) => {
-                if let Ok(publisher) = share
-                    && let Err(err) = publisher.update_shared_task_by_id(ctx.task.id).await
-                {
-                    tracing::warn!(
-                        ?err,
-                        "Failed to propagate shared task update for {}",
-                        ctx.task.id
-                    );
+        // Don't change status if task is in Plan mode - it should stay in Plan
+        // until user manually moves it to Dev
+        if ctx.task.status == TaskStatus::Plan {
+            tracing::info!(
+                "Task {} is in Plan status, keeping status unchanged after execution",
+                ctx.task.id
+            );
+        } else {
+            match Task::update_status(&db.pool, ctx.task.id, TaskStatus::InReview).await {
+                Ok(_) => {
+                    if let Ok(publisher) = share
+                        && let Err(err) = publisher.update_shared_task_by_id(ctx.task.id).await
+                    {
+                        tracing::warn!(
+                            ?err,
+                            "Failed to propagate shared task update for {}",
+                            ctx.task.id
+                        );
+                    }
                 }
-            }
-            Err(e) => {
-                tracing::error!("Failed to update task status to InReview: {e}");
+                Err(e) => {
+                    tracing::error!("Failed to update task status to InReview: {e}");
+                }
             }
         }
         let notify_cfg = config.read().await.notifications.clone();
@@ -382,6 +392,15 @@ impl LocalContainerService {
                 // Update executor session summary if available
                 if let Err(e) = container.update_executor_session_summary(&exec_id).await {
                     tracing::warn!("Failed to update executor session summary: {}", e);
+                }
+
+                // Extract and save plan from PlanPresentation if present
+                if let Some(plan) = container.extract_plan_from_history(&exec_id) {
+                    if let Err(e) = Task::update_plan(&db.pool, ctx.task.id, Some(plan)).await {
+                        tracing::warn!("Failed to update task plan: {}", e);
+                    } else {
+                        tracing::info!("Saved plan for task {}", ctx.task.id);
+                    }
                 }
 
                 let success = matches!(
@@ -675,6 +694,33 @@ impl LocalContainerService {
                             return Some(format!("{truncated}..."));
                         }
                         return Some(content.to_string());
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Extract the plan from PlanPresentation tool use in the MsgStore history
+    fn extract_plan_from_history(&self, exec_id: &Uuid) -> Option<String> {
+        // Get the MsgStore for this execution
+        let msg_stores = self.msg_stores.try_read().ok()?;
+        let msg_store = msg_stores.get(exec_id)?;
+
+        // Get the history and scan for PlanPresentation
+        let history = msg_store.get_history();
+
+        for msg in history.iter().rev() {
+            if let LogMsg::JsonPatch(patch) = msg {
+                // Try to extract a NormalizedEntry from the patch
+                if let Some((_, entry)) = extract_normalized_entry_from_patch(patch) {
+                    if let NormalizedEntryType::ToolUse { action_type, .. } = &entry.entry_type {
+                        if let ActionType::PlanPresentation { plan } = action_type {
+                            if !plan.trim().is_empty() {
+                                return Some(plan.clone());
+                            }
+                        }
                     }
                 }
             }
@@ -1101,11 +1147,13 @@ impl ContainerService for LocalContainerService {
         }
 
         // Update task status to InReview when execution is stopped
+        // But keep Plan status unchanged - plan mode tasks stay in Plan
         if let Ok(ctx) = ExecutionProcess::load_context(&self.db.pool, execution_process.id).await
             && !matches!(
                 ctx.execution_process.run_reason,
                 ExecutionProcessRunReason::DevServer
             )
+            && ctx.task.status != TaskStatus::Plan // Don't change Plan status
         {
             match Task::update_status(&self.db.pool, ctx.task.id, TaskStatus::InReview).await {
                 Ok(_) => {

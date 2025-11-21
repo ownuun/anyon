@@ -5,8 +5,8 @@ use axum::{
     response::Response,
 };
 use db::models::{
-    execution_process::ExecutionProcess, project::Project, tag::Tag, task::Task,
-    task_attempt::TaskAttempt,
+    execution_process::ExecutionProcess, project::Project, tag::Tag,
+    task::Task, task_attempt::TaskAttempt,
 };
 use deployment::Deployment;
 use uuid::Uuid;

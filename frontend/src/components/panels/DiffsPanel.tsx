@@ -98,8 +98,8 @@ export function DiffsPanel({ selectedAttempt, gitOps }: DiffsPanelProps) {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 m-4">
-        <div className="text-red-800 text-sm">
+      <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 m-4">
+        <div className="text-destructive text-sm">
           {t('diff.errorLoadingDiff', { error })}
         </div>
       </div>
@@ -196,10 +196,10 @@ function DiffsPanelContent({
               aria-live="polite"
             >
               {t('diff.filesChanged', { count: fileCount })}{' '}
-              <span className="text-green-600 dark:text-green-500">
+              <span className="text-success">
                 +{added}
               </span>{' '}
-              <span className="text-red-600 dark:text-red-500">-{deleted}</span>
+              <span className="text-destructive">-{deleted}</span>
             </span>
           </div>
         </NewCardHeader>

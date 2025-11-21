@@ -12,7 +12,7 @@ function getStatusIcon(status?: string) {
   if (s === 'completed')
     return <Check aria-hidden className="h-4 w-4 text-success" />;
   if (s === 'in_progress' || s === 'in-progress')
-    return <CircleDot aria-hidden className="h-4 w-4 text-blue-500" />;
+    return <CircleDot aria-hidden className="h-4 w-4 text-info" />;
   return <Circle aria-hidden className="h-4 w-4 text-muted-foreground" />;
 }
 

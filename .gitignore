@@ -73,8 +73,8 @@ crates/server/bindings
 build-npm-package-codesign.sh
 
 npx-cli/dist
-npx-cli/vibe-kanban-*
-vibe-kanban-*.tgz
+npx-cli/anyon-*
+anyon-*.tgz
 
 # Development ports file
 .dev-ports.json
@@ -83,5 +83,5 @@ dev_assets
 /frontend/.env.sentry-build-plugin
 .ssh
 
-vibe-kanban-cloud/
+anyon-cloud/
 remote-frontend/dist

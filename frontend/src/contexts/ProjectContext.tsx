@@ -10,6 +10,8 @@ import { useQuery } from '@tanstack/react-query';
 import { projectsApi } from '@/lib/api';
 import type { Project } from 'shared/types';
 
+const LAST_PROJECT_ID_KEY = 'anyon_last_project_id';
+
 interface ProjectContextValue {
   projectId: string | undefined;
   project: Project | undefined;
@@ -27,11 +29,24 @@ interface ProjectProviderProps {
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const location = useLocation();
 
-  // Extract projectId from current route path
+  // Extract projectId from: 1) route path, 2) query param, 3) localStorage
   const projectId = useMemo(() => {
-    const match = location.pathname.match(/^\/projects\/([^/]+)/);
-    return match ? match[1] : undefined;
-  }, [location.pathname]);
+    // First, check route path
+    const pathMatch = location.pathname.match(/^\/projects\/([^/]+)/);
+    if (pathMatch) {
+      return pathMatch[1];
+    }
+
+    // Then, check query parameter
+    const searchParams = new URLSearchParams(location.search);
+    const queryProjectId = searchParams.get('projectId');
+    if (queryProjectId) {
+      return queryProjectId;
+    }
+
+    // Finally, fallback to localStorage
+    return localStorage.getItem(LAST_PROJECT_ID_KEY) || undefined;
+  }, [location.pathname, location.search]);
 
   const query = useQuery({
     queryKey: ['project', projectId],
@@ -51,12 +66,20 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     [projectId, query.data, query.isLoading, query.error, query.isError]
   );
 
+  // Save projectId to localStorage when navigating to a project
+  useEffect(() => {
+    const pathMatch = location.pathname.match(/^\/projects\/([^/]+)/);
+    if (pathMatch) {
+      localStorage.setItem(LAST_PROJECT_ID_KEY, pathMatch[1]);
+    }
+  }, [location.pathname]);
+
   // Centralized page title management
   useEffect(() => {
     if (query.data) {
-      document.title = `${query.data.name} | vibe-kanban`;
+      document.title = `${query.data.name} | ANYON`;
     } else {
-      document.title = 'vibe-kanban';
+      document.title = 'ANYON';
     }
   }, [query.data]);
 

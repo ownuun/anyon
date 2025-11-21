@@ -299,7 +299,7 @@ export function ProjectFormFields({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new-project-name">
-                Project Name <span className="text-red-500">*</span>
+                Project Name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="new-project-name"

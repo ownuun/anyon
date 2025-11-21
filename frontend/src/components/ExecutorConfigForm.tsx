@@ -5,7 +5,6 @@ import { RJSFValidationError } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { shadcnTheme } from './rjsf';
@@ -82,9 +81,9 @@ export function ExecutorConfigForm({
   }
 
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardContent className="p-0">
+    <div className="space-y-6">
+      <div className="border rounded-lg">
+        <div className="p-6">
           <Form
             schema={schema}
             formData={formData}
@@ -112,8 +111,8 @@ export function ExecutorConfigForm({
               </div>
             )}
           </Form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {validationErrors.length > 0 && (
         <Alert variant="destructive">

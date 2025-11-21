@@ -21,8 +21,8 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REMOTE_DEPLOYMENT_TOKEN }}
-          repository: BloopAI/vibe-kanban-remote-deployment
-          event-type: vibe-kanban-remote-deploy-dev
+          repository: SlitAI/anyon-remote-deployment
+          event-type: anyon-remote-deploy-dev
           client-payload: |
             {
               "ref": "${{ github.ref_name }}",

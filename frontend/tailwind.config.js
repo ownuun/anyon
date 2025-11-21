@@ -32,6 +32,13 @@ module.exports = {
       },
     },
     extend: {
+      fontSize: { // These are downshifted by 1
+        xs: ['0.625rem', { lineHeight: '0.875rem' }], // 10px / 14px
+        sm: ['0.75rem', { lineHeight: '1rem' }],     // 12px / 16px
+        base: ['0.875rem', { lineHeight: '1.25rem' }],  // 14px / 20px
+        lg: ['1rem', { lineHeight: '1.5rem' }],   // 16px / 24px
+        xl: ['1.125rem', { lineHeight: '1.75rem' }],  // 18px / 28px
+      },
       backgroundImage: {
         'diagonal-lines': `
           repeating-linear-gradient(-45deg, hsl(var(--border) / 0.4) 0 2px, transparent 1px 12px),
@@ -40,13 +47,6 @@ module.exports = {
       },
       ringColor: {
         DEFAULT: 'hsl(var(--primary))', // e.g. Tailwind's blue-500
-      },
-      fontSize: { // These are downshifted by 1
-        xs: ['0.625rem', { lineHeight: '0.875rem' }], // 10px / 14px
-        sm: ['0.75rem', { lineHeight: '1rem' }],     // 12px / 16px
-        base: ['0.875rem', { lineHeight: '1.25rem' }],  // 14px / 20px
-        lg: ['1rem', { lineHeight: '1.5rem' }],   // 16px / 24px
-        xl: ['1.125rem', { lineHeight: '1.75rem' }],  // 18px / 28px
       },
       colors: {
         border: "hsl(var(--border))",
@@ -123,7 +123,7 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        'chivo-mono': ['Chivo Mono', 'Noto Emoji', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

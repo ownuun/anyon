@@ -80,13 +80,13 @@ export function CommentWidgetLine({
   });
 
   return (
-    <div className="p-4 border-y bg-primary">
+    <div className="p-4 border-y bg-muted">
       <FileSearchTextarea
         ref={textareaRef}
         value={value}
         onChange={setValue}
         placeholder="Add a comment... (type @ to search files)"
-        className="w-full bg-primary text-primary-foreground text-sm font-mono resize-none min-h-[60px] focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-background text-foreground text-sm font-mono resize-none min-h-[60px] focus:outline-none focus:ring-1 focus:ring-ring rounded-md border"
         projectId={projectId}
       />
       <div className="mt-2 flex gap-2">

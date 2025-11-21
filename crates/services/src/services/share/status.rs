@@ -4,6 +4,7 @@ use remote::db::tasks::TaskStatus as RemoteTaskStatus;
 pub(super) fn to_remote(status: &TaskStatus) -> RemoteTaskStatus {
     match status {
         TaskStatus::Todo => RemoteTaskStatus::Todo,
+        TaskStatus::Plan => RemoteTaskStatus::Todo, // Plan maps to Todo for remote sync
         TaskStatus::InProgress => RemoteTaskStatus::InProgress,
         TaskStatus::InReview => RemoteTaskStatus::InReview,
         TaskStatus::Done => RemoteTaskStatus::Done,

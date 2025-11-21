@@ -1,0 +1,41 @@
+{
+  "type": "module",
+  "name": "anyon-web-companion",
+  "version": "0.0.1",
+  "description": "Add point-and-click edit functionality to web apps, when used with Anyon.",
+  "exports": {
+    "types": "./src/types.d.ts",
+    "import": "./src/index.js",
+    "default": "./src/index.js"
+  },
+  "types": "src/types.d.ts",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "echo \"No build needed\"",
+    "dev": "pnpm run build",
+    "lint": "tsc -p ./jsconfig.json",
+    "test": "echo \"No tests\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SlitAI/anyon.git"
+  },
+  "keywords": [
+    "react",
+    "dx",
+    "devtools"
+  ],
+  "author": "slit",
+  "license": "ISC",
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "dependencies": {
+    "@floating-ui/react-dom-interactions": "^0.3.1",
+    "htm": "^3.1.0",
+    "react-merge-refs": "^1.1.0"
+  },
+  "sideEffects": false
+}

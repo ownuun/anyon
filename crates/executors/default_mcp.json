@@ -1,9 +1,9 @@
 {
-  "vibe_kanban": {
+  "anyon": {
     "command": "npx",
     "args": [
       "-y",
-      "vibe-kanban@latest",
+      "anyon@latest",
       "--mcp"
     ]
   },
@@ -21,11 +21,11 @@
     ]
   },
   "meta": {
-    "vibe_kanban": {
-      "name": "Vibe Kanban",
-      "description": "Create, update and delete Vibe Kanban tasks",
-      "url": "https://www.vibekanban.com/docs/integrations/vibe-kanban-mcp-server",
-      "icon": "favicon-vk-light.svg"
+    "anyon": {
+      "name": "Anyon",
+      "description": "Create, update and delete Anyon tasks",
+      "url": "https://www.anyon.dev/docs/integrations/anyon-mcp-server",
+      "icon": "favicon-ay-light.svg"
     },
     "context7": {
       "name": "Context7",

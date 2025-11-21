@@ -192,11 +192,11 @@ export function NextActionCard({
             >
               <span>{t('diff.filesChanged', { count: fileCount })}</span>
               <span className="opacity-50">•</span>
-              <span className="text-green-600 dark:text-green-400">
+              <span className="text-success">
                 +{added}
               </span>
               <span className="opacity-50">•</span>
-              <span className="text-red-600 dark:text-red-400">-{deleted}</span>
+              <span className="text-destructive">-{deleted}</span>
             </button>
           )}
 
@@ -257,7 +257,7 @@ export function NextActionCard({
                       aria-label={t('attempt.clickToCopy')}
                     >
                       {copied ? (
-                        <Check className="h-3.5 w-3.5 text-green-600" />
+                        <Check className="h-3.5 w-3.5 text-success" />
                       ) : (
                         <Copy className="h-3.5 w-3.5" />
                       )}

@@ -240,7 +240,7 @@ const OAuthDialogImpl = NiceModal.create<NoProps>(() => {
             </DialogHeader>
 
             <div className="py-4 flex items-center justify-center">
-              <div className="text-green-500">
+              <div className="text-success">
                 <svg
                   className="h-16 w-16"
                   fill="none"

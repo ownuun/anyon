@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings, Cpu, Server, X, FolderOpen, Building2 } from 'lucide-react';
+import { Settings, Cpu, Server, X, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
@@ -16,10 +16,6 @@ const settingsNavigation = [
   {
     path: 'projects',
     icon: FolderOpen,
-  },
-  {
-    path: 'organizations',
-    icon: Building2,
   },
   {
     path: 'agents',
@@ -58,19 +54,24 @@ export function SettingsLayout() {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="container mx-auto px-4 py-8">
+      <div className="space-y-6 p-8 pb-16 md:pb-8">
         {/* Header with title and close button */}
-        <div className="flex items-center justify-between sticky top-0 bg-background z-10 py-4 -mx-4 px-4">
-          <h1 className="text-2xl font-semibold">
-            {t('settings.layout.nav.title')}
-          </h1>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {t('settings.layout.nav.title')}
+            </h1>
+            <p className="text-muted-foreground">
+              {t('settings.layout.nav.description')}
+            </p>
+          </div>
           <Button
             variant="ghost"
             onClick={handleBack}
-            className="h-8 px-2 rounded-none border border-foreground/20 hover:border-foreground/30 transition-all hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex items-center gap-1.5"
+            className="h-10 px-4 rounded-md border border-foreground/20 hover:border-foreground/30 transition-all flex items-center gap-2"
           >
             <X className="h-4 w-4" />
-            <span className="text-xs font-medium">ESC</span>
+            <span className="text-sm font-medium">ESC</span>
           </Button>
         </div>
         <div className="flex flex-col lg:flex-row gap-8">
@@ -87,11 +88,10 @@ export function SettingsLayout() {
                       end
                       className={({ isActive }) =>
                         cn(
-                          'flex items-start gap-3 px-3 py-2 text-sm transition-colors',
-                          'hover:text-accent-foreground',
+                          'flex items-start gap-3 px-3 py-2 text-sm rounded-md transition-colors',
                           isActive
-                            ? 'text-primary-foreground'
-                            : 'text-secondary-foreground'
+                            ? 'bg-accent text-foreground'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                         )
                       }
                     >

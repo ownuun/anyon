@@ -66,7 +66,7 @@ const AutoExpandingTextarea = React.forwardRef<
     return (
       <textarea
         className={cn(
-          'bg-muted p-0 min-h-[80px] w-full text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-x-hidden whitespace-pre-wrap break-words',
+          'w-full min-h-[56px] px-4 py-3 text-base bg-background border border-border/60 rounded-2xl shadow-sm outline-none transition-colors placeholder:text-muted-foreground/50 hover:border-border focus:border-foreground/20 disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-x-hidden whitespace-pre-wrap break-words',
           disableInternalScroll ? 'overflow-hidden' : 'overflow-y-auto',
           className
         )}

@@ -87,7 +87,7 @@ export default function WYSIWYGEditor({
               />
             }
             placeholder={
-              <div className="absolute top-0 left-0 text-gray-400 pointer-events-none">
+              <div className="absolute top-0 left-0 text-muted-foreground pointer-events-none">
                 {placeholder}
               </div>
             }

@@ -42,8 +42,8 @@
     "pending": "Pending"
   },
   "settings": {
-    "title": "Organization Settings",
-    "description": "Manage organization members and permissions",
+    "title": "조직 설정",
+    "description": "조직 멤버 및 권한 관리",
     "selectLabel": "Select Organization",
     "selectPlaceholder": "Select an organization",
     "selectHelper": "Choose an organization to view and manage its members",
@@ -63,7 +63,7 @@
     "description": "조직 설정을 관리하려면 로그인해야 합니다.",
     "action": "로그인"
   },
-  "confirmRemoveMember": "Are you sure you want to remove this member from the organization?",
+  "confirmRemoveMember": "이 멤버를 조직에서 제거하시겠습니까?",
   "sharedProjects": {
     "title": "공유 프로젝트",
     "description": "{{orgName}}의 원격 프로젝트와 로컬 프로젝트에 대한 연결",

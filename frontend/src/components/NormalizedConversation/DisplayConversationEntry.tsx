@@ -133,8 +133,8 @@ const getStatusIndicator = (entryType: NormalizedEntryType) => {
 
   // If pending, should be a pulsing primary-foreground
   const colorMap: Record<ExitStatusVisualisation, string> = {
-    success: 'bg-green-300',
-    error: 'bg-red-300',
+    success: 'bg-success',
+    error: 'bg-destructive',
     pending: 'bg-primary-foreground/50',
   };
 
@@ -186,13 +186,13 @@ const getContentClassName = (entryType: NormalizedEntryType) => {
           entryType.tool_name.toLowerCase()
         )))
   )
-    return `${base} font-mono text-zinc-800 dark:text-zinc-200`;
+    return `${base} font-mono text-foreground`;
 
   if (
     entryType.type === 'tool_use' &&
     entryType.action_type.action === 'plan_presentation'
   )
-    return `${base} text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 px-3 py-2 border-l-4 border-blue-400`;
+    return `${base} text-info bg-info/10 px-3 py-2 border-l-4 border-info`;
 
   return base;
 };
@@ -210,10 +210,10 @@ const MessageCard: React.FC<{
   onToggle?: () => void;
 }> = ({ children, variant, expanded, onToggle }) => {
   const frameBase =
-    'border px-3 py-2 w-full cursor-pointer  bg-[hsl(var(--card))] border-[hsl(var(--border))]';
-  const systemTheme = 'border-400/40 text-zinc-500';
+    'rounded-lg border px-4 py-3 w-full cursor-pointer transition-colors';
+  const systemTheme = 'bg-muted/50 border-border/50 text-foreground/80 hover:bg-muted/70';
   const errorTheme =
-    'border-red-400/40 bg-red-50 dark:bg-[hsl(var(--card))] text-[hsl(var(--foreground))]';
+    'border-destructive/30 bg-destructive/10 text-foreground hover:bg-destructive/15';
 
   return (
     <div
@@ -222,7 +222,7 @@ const MessageCard: React.FC<{
       }`}
       onClick={onToggle}
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">{children}</div>
         {onToggle && (
           <ExpandChevron
@@ -249,8 +249,8 @@ const ExpandChevron: React.FC<{
 }> = ({ expanded, onClick, variant }) => {
   const color =
     variant === 'system'
-      ? 'text-700 dark:text-300'
-      : 'text-red-700 dark:text-red-300';
+      ? 'text-muted-foreground'
+      : 'text-destructive';
 
   return (
     <ChevronDown
@@ -329,25 +329,25 @@ const PLAN_APPEARANCE: Record<
   }
 > = {
   default: {
-    border: 'border-blue-400/40',
-    headerBg: 'bg-blue-50 dark:bg-blue-950/20',
-    headerText: 'text-blue-700 dark:text-blue-300',
-    contentBg: 'bg-blue-50 dark:bg-blue-950/20',
-    contentText: 'text-blue-700 dark:text-blue-300',
+    border: 'border-info/40',
+    headerBg: 'bg-info/10',
+    headerText: 'text-info',
+    contentBg: 'bg-info/10',
+    contentText: 'text-info',
   },
   denied: {
-    border: 'border-red-400/40',
-    headerBg: 'bg-red-50 dark:bg-red-950/20',
-    headerText: 'text-red-700 dark:text-red-300',
-    contentBg: 'bg-red-50 dark:bg-red-950/10',
-    contentText: 'text-red-700 dark:text-red-300',
+    border: 'border-destructive/40',
+    headerBg: 'bg-destructive/10',
+    headerText: 'text-destructive',
+    contentBg: 'bg-destructive/5',
+    contentText: 'text-destructive',
   },
   timed_out: {
-    border: 'border-amber-400/40',
-    headerBg: 'bg-amber-50 dark:bg-amber-950/20',
-    headerText: 'text-amber-700 dark:text-amber-200',
-    contentBg: 'bg-amber-50 dark:bg-amber-950/10',
-    contentText: 'text-amber-700 dark:text-amber-200',
+    border: 'border-warning/40',
+    headerBg: 'bg-warning/10',
+    headerText: 'text-warning',
+    contentBg: 'bg-warning/5',
+    contentText: 'text-warning',
   },
 };
 
@@ -372,7 +372,7 @@ const PlanPresentationCard: React.FC<{
   return (
     <div className="inline-block w-full">
       <div
-        className={cn('border w-full overflow-hidden rounded-sm', tone.border)}
+        className={cn('border w-full overflow-hidden rounded-lg', tone.border)}
       >
         <button
           onClick={(e: React.MouseEvent) => {
@@ -385,7 +385,7 @@ const PlanPresentationCard: React.FC<{
               : t('conversation.planToggle.show')
           }
           className={cn(
-            'w-full px-2 py-1.5 flex items-center gap-1.5 text-left border-b',
+            'w-full px-4 py-2.5 flex items-center gap-2 text-left border-b',
             tone.headerBg,
             tone.headerText,
             tone.border
@@ -404,8 +404,8 @@ const PlanPresentationCard: React.FC<{
         </button>
 
         {expanded && (
-          <div className={cn('px-3 py-2', tone.contentBg)}>
-            <div className={cn('text-sm', tone.contentText)}>
+          <div className={cn('px-4 py-3', tone.contentBg)}>
+            <div className={cn('', tone.contentText)}>
               <MarkdownRenderer
                 content={plan}
                 className="whitespace-pre-wrap break-words"
@@ -502,7 +502,7 @@ const ToolCallCard: React.FC<{
             {entryType && getEntryIcon(entryType)}
           </span>
           {showInlineSummary ? (
-            <span className="font-light">{inlineText}</span>
+            <span>{inlineText}</span>
           ) : (
             <span className="font-normal">{label}</span>
           )}
@@ -510,24 +510,24 @@ const ToolCallCard: React.FC<{
       </HeaderWrapper>
 
       {effectiveExpanded && (
-        <div className="max-h-[200px] overflow-y-auto border">
+        <div className="max-h-[200px] overflow-y-auto border rounded-lg">
           {isCommand ? (
             <>
               {argsText && (
                 <>
-                  <div className="font-normal uppercase bg-background border-b border-dashed px-2 py-1">
+                  <div className="text-xs font-medium uppercase text-muted-foreground bg-muted/30 border-b px-3 py-2">
                     {t('conversation.args')}
                   </div>
-                  <div className="px-2 py-1">{argsText}</div>
+                  <div className="px-3 py-2">{argsText}</div>
                 </>
               )}
 
               {output && (
                 <>
-                  <div className="font-normal uppercase bg-background border-y border-dashed px-2 py-1">
+                  <div className="text-xs font-medium uppercase text-muted-foreground bg-muted/30 border-y px-3 py-2">
                     {t('conversation.output')}
                   </div>
-                  <div className="px-2 py-1">
+                  <div className="px-3 py-2">
                     <RawLogText content={output} linkifyUrls={linkifyUrls} />
                   </div>
                 </>
@@ -537,16 +537,16 @@ const ToolCallCard: React.FC<{
             <>
               {isTool && actionType && (
                 <>
-                  <div className="font-normal uppercase bg-background border-b border-dashed px-2 py-1">
+                  <div className="text-xs font-medium uppercase text-muted-foreground bg-muted/30 border-b px-3 py-2">
                     {t('conversation.args')}
                   </div>
-                  <div className="px-2 py-1">
+                  <div className="px-3 py-2">
                     {renderJson(actionType.arguments)}
                   </div>
-                  <div className="font-normal uppercase bg-background border-y border-dashed px-2 py-1">
+                  <div className="text-xs font-medium uppercase text-muted-foreground bg-muted/30 border-y px-3 py-2">
                     {t('conversation.result')}
                   </div>
-                  <div className="px-2 py-1">
+                  <div className="px-3 py-2">
                     {actionType.result?.type.type === 'markdown' &&
                       actionType.result.value && (
                         <MarkdownRenderer
@@ -568,9 +568,9 @@ const ToolCallCard: React.FC<{
 
 const LoadingCard = () => {
   return (
-    <div className="flex animate-pulse space-x-2 items-center">
-      <div className="size-3 bg-foreground/10"></div>
-      <div className="flex-1 h-3 bg-foreground/10"></div>
+    <div className="flex animate-pulse space-x-3 items-center">
+      <div className="size-3 rounded-full bg-foreground/20"></div>
+      <div className="flex-1 h-3 rounded-md bg-foreground/10"></div>
       <div className="flex-1 h-3"></div>
       <div className="flex-1 h-3"></div>
     </div>
@@ -655,18 +655,15 @@ function DisplayConversationEntry({
     >;
     return (
       <div className="py-2">
-        <div className="bg-background px-4 py-2 text-sm border-y border-dashed">
-          <div
-            className="text-xs mb-1 opacity-70"
-            style={{ color: 'hsl(var(--destructive))' }}
-          >
+        <div className="bg-destructive/5 px-4 py-3 rounded-lg border border-destructive/20">
+          <div className="text-xs font-medium mb-2 text-destructive">
             {t('conversation.deniedByUser', {
               toolName: feedbackEntry.denied_tool,
             })}
           </div>
           <MarkdownRenderer
             content={entry.content}
-            className="whitespace-pre-wrap break-words flex flex-col gap-1 font-light py-3"
+            className="whitespace-pre-wrap break-words flex flex-col gap-1"
           />
         </div>
       </div>
@@ -790,12 +787,12 @@ function DisplayConversationEntry({
   }
 
   return (
-    <div className="px-4 py-2 text-sm">
+    <div className="px-4 py-2 text-[18px]">
       <div className={getContentClassName(entryType)}>
         {shouldRenderMarkdown(entryType) ? (
           <MarkdownRenderer
             content={isNormalizedEntry(entry) ? entry.content : ''}
-            className="whitespace-pre-wrap break-words flex flex-col gap-1 font-light"
+            className="whitespace-pre-wrap break-words flex flex-col gap-1"
             enableCopyButton={entryType.type === 'assistant_message'}
           />
         ) : isNormalizedEntry(entry) ? (

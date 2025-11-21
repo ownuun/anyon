@@ -34,7 +34,7 @@ function FileContentView({ content, lang, theme }: Props) {
   }, [content, lang]);
 
   return diffFile ? (
-    <div className="border mt-2">
+    <div className="border rounded-lg overflow-hidden mt-2">
       <DiffView
         diffFile={diffFile}
         diffViewWrap={false}

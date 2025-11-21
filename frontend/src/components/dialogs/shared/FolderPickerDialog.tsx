@@ -256,16 +256,16 @@ const FolderPickerDialogImpl = NiceModal.create<FolderPickerDialogProps>(
                         entry.is_git_repo ? (
                           <FolderOpen className="h-4 w-4 text-success flex-shrink-0" />
                         ) : (
-                          <Folder className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                          <Folder className="h-4 w-4 text-info flex-shrink-0" />
                         )
                       ) : (
-                        <File className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       )}
                       <span className="text-sm flex-1 truncate min-w-0">
                         {entry.name}
                       </span>
                       {entry.is_git_repo && (
-                        <span className="text-xs text-success bg-green-100 px-2 py-1 rounded flex-shrink-0">
+                        <span className="text-xs text-success bg-success/10 px-2 py-1 rounded flex-shrink-0">
                           git repo
                         </span>
                       )}

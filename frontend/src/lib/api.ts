@@ -96,7 +96,7 @@ class ApiError<E = unknown> extends Error {
   }
 }
 
-const makeRequest = async (url: string, options: RequestInit = {}) => {
+export const makeRequest = async (url: string, options: RequestInit = {}) => {
   const headers = new Headers(options.headers ?? {});
   if (!headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
@@ -115,7 +115,7 @@ export type Err<E> = { success: false; error: E | undefined; message?: string };
 export type Result<T, E> = Ok<T> | Err<E>;
 
 // Special handler for Result-returning endpoints
-const handleApiResponseAsResult = async <T, E>(
+export const handleApiResponseAsResult = async <T, E>(
   response: Response
 ): Promise<Result<T, E>> => {
   if (!response.ok) {
@@ -151,7 +151,7 @@ const handleApiResponseAsResult = async <T, E>(
   return { success: true, data: result.data as T };
 };
 
-const handleApiResponse = async <T, E = T>(response: Response): Promise<T> => {
+export const handleApiResponse = async <T, E = T>(response: Response): Promise<T> => {
   if (!response.ok) {
     let errorMessage = `Request failed with status ${response.status}`;
 

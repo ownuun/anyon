@@ -1,6 +1,7 @@
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCallback } from 'react';
 import { siDiscord } from 'simple-icons';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,7 +20,10 @@ import {
   Plus,
   LogOut,
   LogIn,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
+import { projectsApi } from '@/lib/api';
 import { Logo } from '@/components/Logo';
 import { SearchBar } from '@/components/SearchBar';
 import { useSearch } from '@/contexts/SearchContext';
@@ -46,12 +50,12 @@ const EXTERNAL_LINKS = [
   {
     label: 'Docs',
     icon: BookOpen,
-    href: 'https://vibekanban.com/docs',
+    href: 'https://anyon.dev/docs',
   },
   {
     label: 'Support',
     icon: MessageCircleQuestion,
-    href: 'https://github.com/BloopAI/vibe-kanban/issues',
+    href: 'https://github.com/SlitAI/anyon/issues',
   },
   {
     label: 'Discord',
@@ -72,12 +76,29 @@ function NavDivider() {
 
 export function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { projectId, project } = useProject();
   const { query, setQuery, active, clear, registerInputRef } = useSearch();
   const handleOpenInEditor = useOpenProjectInEditor(project || null);
   const { data: onlineCount } = useDiscordOnlineCount();
   const { loginStatus, reloadSystem } = useUserSystem();
+
+  // Fetch all projects for the dropdown
+  const { data: allProjects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: projectsApi.getAll,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const handleProjectChange = useCallback(
+    (newProjectId: string) => {
+      if (newProjectId !== projectId) {
+        navigate(`/projects/${newProjectId}/tasks`);
+      }
+    },
+    [navigate, projectId]
+  );
 
   const setSearchBarRef = useCallback(
     (node: HTMLInputElement | null) => {
@@ -141,6 +162,49 @@ export function Navbar() {
             <Link to="/projects">
               <Logo />
             </Link>
+
+            {/* Project Selector */}
+            {project && (
+              <>
+                <span className="mx-2 text-muted-foreground/50">/</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 gap-1 font-medium text-sm"
+                    >
+                      <span className="max-w-[200px] truncate">
+                        {project.name}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-[200px]">
+                    {allProjects.map((p) => (
+                      <DropdownMenuItem
+                        key={p.id}
+                        onSelect={() => handleProjectChange(p.id)}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="truncate">{p.name}</span>
+                        {p.id === projectId && (
+                          <Check className="h-4 w-4 text-primary shrink-0" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    {allProjects.length > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuItem asChild>
+                      <Link to="/projects" className="flex items-center">
+                        <FolderOpen className="mr-2 h-4 w-4" />
+                        {t('common:allProjects')}
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+
             <a
               href="https://discord.gg/AC4nwVtJM3"
               target="_blank"

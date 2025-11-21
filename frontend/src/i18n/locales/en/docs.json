@@ -1,0 +1,19 @@
+{
+  "title": "Documentation",
+  "subtitle": "Manage your project documentation",
+  "documentList": "Document List",
+  "noDocuments": "No documents yet",
+  "newDocument": "New Document",
+  "enterDocumentName": "Enter document name",
+  "categories": {
+    "planning": {
+      "title": "Planning"
+    },
+    "design": {
+      "title": "Design"
+    },
+    "technology": {
+      "title": "Technology"
+    }
+  }
+}

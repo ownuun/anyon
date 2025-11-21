@@ -18,12 +18,12 @@ interface TasksLayoutProps {
 type SplitSizes = [number, number];
 
 const MIN_PANEL_SIZE = 20;
-const DEFAULT_KANBAN_ATTEMPT: SplitSizes = [66, 34];
 const DEFAULT_ATTEMPT_AUX: SplitSizes = [34, 66];
+const DEFAULT_KANBAN_ATTEMPT: SplitSizes = [66, 34];
 
 const STORAGE_KEYS = {
-  KANBAN_ATTEMPT: 'tasksLayout.desktop.v2.kanbanAttempt',
   ATTEMPT_AUX: 'tasksLayout.desktop.v2.attemptAux',
+  KANBAN_ATTEMPT: 'tasksLayout.desktop.v2.kanbanAttempt',
 } as const;
 
 function loadSizes(key: string, fallback: SplitSizes): SplitSizes {
@@ -167,7 +167,7 @@ function RightWorkArea({
 
 /**
  * DesktopSimple - Conditionally renders layout based on mode.
- * When mode === null: Shows Kanban | Attempt
+ * When mode === null: Shows Kanban with fixed-width Attempt sidebar
  * When mode !== null: Hides Kanban, shows only RightWorkArea with Attempt | Aux
  */
 function DesktopSimple({

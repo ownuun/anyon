@@ -65,12 +65,22 @@
     "selectPlaceholder": "Select an organization",
     "currentBadge": " (current)"
   },
+  "settings": "Settings",
+  "sidebar": {
+    "projects": "Projects",
+    "organizations": "Organizations",
+    "tabs": {
+      "documents": "Documents",
+      "development": "Development"
+    }
+  },
   "signOut": "Sign out",
+  "allProjects": "All Projects",
   "devMode": {
     "banner": "Development Mode - This is a development build"
   },
   "oauth": {
-    "title": "Sign in to Vibe Kanban",
+    "title": "Sign in to Anyon",
     "description": "Sign in to join organizations and share tasks with your team",
     "continueWithGitHub": "Continue with GitHub",
     "continueWithGoogle": "Continue with Google",

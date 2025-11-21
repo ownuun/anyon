@@ -132,9 +132,9 @@ impl Deployment for LocalDeployment {
         let profile_cache = Arc::new(RwLock::new(None));
         let auth_context = AuthContext::new(oauth_credentials.clone(), profile_cache.clone());
 
-        let api_base = std::env::var("VK_SHARED_API_BASE")
+        let api_base = std::env::var("ANYON_SHARED_API_BASE")
             .ok()
-            .or_else(|| option_env!("VK_SHARED_API_BASE").map(|s| s.to_string()));
+            .or_else(|| option_env!("ANYON_SHARED_API_BASE").map(|s| s.to_string()));
 
         let remote_client = match api_base {
             Some(url) => match RemoteClient::new(&url, auth_context.clone()) {
@@ -148,7 +148,7 @@ impl Deployment for LocalDeployment {
                 }
             },
             None => {
-                tracing::info!("VK_SHARED_API_BASE not set; remote features disabled");
+                tracing::info!("ANYON_SHARED_API_BASE not set; remote features disabled");
                 Err(RemoteClientNotConfigured)
             }
         };
