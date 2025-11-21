@@ -386,12 +386,12 @@ const TaskFormDialogImpl = NiceModal.create<TaskFormDialogProps>((props) => {
       <Dialog
         open={modal.visible}
         onOpenChange={handleDialogClose}
-        className="w-full max-w-[min(90vw,40rem)] max-h-[min(95vh,50rem)] flex flex-col overflow-hidden p-0"
+        className="w-full max-w-lg flex flex-col overflow-hidden p-0"
         uncloseable={showDiscardWarning}
       >
         <div
           {...getRootProps()}
-          className="h-full flex flex-col gap-0 px-4 pb-4 relative min-h-0"
+          className="h-full flex flex-col gap-4 p-6 relative min-h-0"
         >
           <input {...getInputProps()} />
           {/* Drag overlay */}
@@ -407,7 +407,7 @@ const TaskFormDialogImpl = NiceModal.create<TaskFormDialogProps>((props) => {
           )}
 
           {/* Title */}
-          <div className="flex-none pr-8 pt-3">
+          <div className="flex-none">
             <form.Field name="title">
               {(field) => (
                 <Input
@@ -415,7 +415,7 @@ const TaskFormDialogImpl = NiceModal.create<TaskFormDialogProps>((props) => {
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder={t('taskFormDialog.titlePlaceholder')}
-                  className="text-lg font-medium border-none shadow-none px-0 placeholder:text-muted-foreground/60 focus-visible:ring-0"
+                  className="text-lg font-medium placeholder:text-muted-foreground/60"
                   disabled={isSubmitting}
                   autoFocus
                 />
@@ -423,7 +423,7 @@ const TaskFormDialogImpl = NiceModal.create<TaskFormDialogProps>((props) => {
             </form.Field>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-1 pb-3">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4">
             {/* Description */}
             <div>
               <form.Field name="description">
@@ -434,7 +434,7 @@ const TaskFormDialogImpl = NiceModal.create<TaskFormDialogProps>((props) => {
                     rows={20}
                     maxRows={35}
                     placeholder={t('taskFormDialog.descriptionPlaceholder')}
-                    className="border-none shadow-none px-0 resize-none placeholder:text-muted-foreground/60 focus-visible:ring-0 text-md font-normal"
+                    className="resize-none placeholder:text-muted-foreground/60 text-md font-normal"
                     disabled={isSubmitting}
                     projectId={projectId}
                     onPasteFiles={onDrop}
@@ -509,7 +509,7 @@ const TaskFormDialogImpl = NiceModal.create<TaskFormDialogProps>((props) => {
               {(autoStartField) => (
                 <div
                   className={cn(
-                    'flex items-center gap-2 h-9 py-2 my-2 transition-opacity duration-200',
+                    'flex items-center gap-2 h-9 transition-opacity duration-200',
                     autoStartField.state.value
                       ? 'opacity-100'
                       : 'opacity-0 pointer-events-none'
@@ -550,7 +550,7 @@ const TaskFormDialogImpl = NiceModal.create<TaskFormDialogProps>((props) => {
           )}
 
           {/* Actions */}
-          <div className="border-t pt-3 flex items-center justify-between gap-3">
+          <div className="border-t pt-4 flex items-center justify-between gap-3">
             {/* Attach Image*/}
             <div className="flex items-center gap-2">
               <Button

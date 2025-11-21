@@ -110,7 +110,7 @@ export const AttemptHeaderActions = ({
         <div className="h-4 w-px bg-border" />
       )}
       <ActionsDropdown task={task} attempt={attempt} sharedTask={sharedTask} />
-      <Button variant="icon" aria-label="Close" onClick={onClose}>
+      <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
         <X size={16} />
       </Button>
     </>

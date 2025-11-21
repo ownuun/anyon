@@ -17,12 +17,9 @@ import {
 } from '@/components/ui/tooltip';
 import { approvalsApi } from '@/lib/api';
 import { Check, X } from 'lucide-react';
-import { FileSearchTextarea } from '@/components/ui/file-search-textarea';
-
 import { useHotkeysContext } from 'react-hotkeys-hook';
 import { TabNavContext } from '@/contexts/TabNavigationContext';
 import { useKeyApproveRequest, useKeyDenyApproval, Scope } from '@/keyboard';
-import { useProject } from '@/contexts/ProjectContext';
 import { useApprovalForm } from '@/contexts/ApprovalFormContext';
 
 const DEFAULT_DENIAL_REASON = 'User denied this tool use request.';
@@ -124,50 +121,6 @@ function ActionButtons({
   );
 }
 
-function DenyReasonForm({
-  isResponding,
-  value,
-  onChange,
-  onCancel,
-  onSubmit,
-  inputRef,
-  projectId,
-}: {
-  isResponding: boolean;
-  value: string;
-  onChange: (v: string) => void;
-  onCancel: () => void;
-  onSubmit: () => void;
-  inputRef: React.RefObject<HTMLTextAreaElement>;
-  projectId?: string;
-}) {
-  return (
-    <div className="mt-3 bg-background px-3 py-3 text-sm">
-      <FileSearchTextarea
-        ref={inputRef}
-        value={value}
-        onChange={onChange}
-        placeholder="Let the agent know why this request was denied... Type @ to insert tags or search files."
-        disabled={isResponding}
-        className="w-full bg-transparent border rounded-md px-3 py-2 text-sm resize-none min-h-[80px] focus-visible:outline-none"
-        projectId={projectId}
-      />
-      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          disabled={isResponding}
-        >
-          Cancel
-        </Button>
-        <Button size="sm" onClick={onSubmit} disabled={isResponding}>
-          Deny
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 // ---------- Main Component ----------
 const PendingApprovalEntry = ({
@@ -179,16 +132,7 @@ const PendingApprovalEntry = ({
   const [hasResponded, setHasResponded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    isEnteringReason,
-    denyReason,
-    setIsEnteringReason,
-    setDenyReason,
-    clear,
-  } = useApprovalForm(pendingStatus.approval_id);
-
-  const denyReasonRef = useRef<HTMLTextAreaElement | null>(null);
-  const { projectId } = useProject();
+  const { clear } = useApprovalForm(pendingStatus.approval_id);
 
   const { enableScope, disableScope, activeScopes } = useHotkeysContext();
   const tabNav = useContext(TabNavContext);
@@ -278,49 +222,23 @@ const PendingApprovalEntry = ({
   );
 
   const handleApprove = useCallback(() => respond(true), [respond]);
-  const handleStartDeny = useCallback(() => {
+  const handleDeny = useCallback(() => {
     if (disabled) return;
     setError(null);
-    setIsEnteringReason(true);
-  }, [disabled, setIsEnteringReason]);
-
-  const handleCancelDeny = useCallback(() => {
-    if (isResponding) return;
-    clear();
-  }, [isResponding, clear]);
-
-  const handleSubmitDeny = useCallback(() => {
-    const trimmed = denyReason.trim();
-    respond(false, trimmed || DEFAULT_DENIAL_REASON);
-  }, [denyReason, respond]);
-
-  const triggerDeny = useCallback(
-    (event?: KeyboardEvent) => {
-      if (!isEnteringReason || disabled || hasResponded) return;
-      event?.preventDefault();
-      handleSubmitDeny();
-    },
-    [isEnteringReason, disabled, hasResponded, handleSubmitDeny]
-  );
+    respond(false, DEFAULT_DENIAL_REASON);
+  }, [disabled, respond]);
 
   useKeyApproveRequest(handleApprove, {
     scope: Scope.APPROVALS,
-    when: () => shouldEnableApprovalsScope && !isEnteringReason,
+    when: () => shouldEnableApprovalsScope,
     preventDefault: true,
   });
 
-  useKeyDenyApproval(triggerDeny, {
+  useKeyDenyApproval(handleDeny, {
     scope: Scope.APPROVALS,
     when: () => shouldEnableApprovalsScope && !hasResponded,
-    enableOnFormTags: ['textarea', 'TEXTAREA'],
     preventDefault: true,
   });
-
-  useEffect(() => {
-    if (!isEnteringReason) return;
-    const id = window.setTimeout(() => denyReasonRef.current?.focus(), 0);
-    return () => window.clearTimeout(id);
-  }, [isEnteringReason]);
 
   return (
     <div className="relative mt-3">
@@ -331,20 +249,16 @@ const PendingApprovalEntry = ({
           <TooltipProvider>
             <div className="flex items-center justify-between gap-1.5 pl-4">
               <div className="flex items-center gap-1.5">
-                {!isEnteringReason && (
-                  <span className="text-muted-foreground">
-                    Would you like to approve this?
-                  </span>
-                )}
+                <span className="text-muted-foreground">
+                  Would you like to approve this?
+                </span>
               </div>
-              {!isEnteringReason && (
-                <ActionButtons
-                  disabled={disabled}
-                  isResponding={isResponding}
-                  onApprove={handleApprove}
-                  onStartDeny={handleStartDeny}
-                />
-              )}
+              <ActionButtons
+                disabled={disabled}
+                isResponding={isResponding}
+                onApprove={handleApprove}
+                onStartDeny={handleDeny}
+              />
             </div>
 
             {error && (
@@ -355,18 +269,6 @@ const PendingApprovalEntry = ({
               >
                 {error}
               </div>
-            )}
-
-            {isEnteringReason && !hasResponded && (
-              <DenyReasonForm
-                isResponding={isResponding}
-                value={denyReason}
-                onChange={setDenyReason}
-                onCancel={handleCancelDeny}
-                onSubmit={handleSubmitDeny}
-                inputRef={denyReasonRef}
-                projectId={projectId}
-              />
             )}
           </TooltipProvider>
         </div>

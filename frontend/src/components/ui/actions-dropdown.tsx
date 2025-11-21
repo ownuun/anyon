@@ -169,7 +169,8 @@ export function ActionsDropdown({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="icon"
+            variant="ghost"
+            size="icon"
             aria-label="Actions"
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}

@@ -210,10 +210,11 @@ const MessageCard: React.FC<{
   onToggle?: () => void;
 }> = ({ children, variant, expanded, onToggle }) => {
   const frameBase =
-    'rounded-lg border px-4 py-3 w-full cursor-pointer transition-colors';
-  const systemTheme = 'bg-muted/50 border-border/50 text-foreground/80 hover:bg-muted/70';
+    'rounded-xl border px-4 py-3.5 w-full cursor-pointer transition-all duration-150';
+  const systemTheme =
+    'bg-slate-50/80 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-700/50 text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/50 shadow-sm';
   const errorTheme =
-    'border-destructive/30 bg-destructive/10 text-foreground hover:bg-destructive/15';
+    'border-red-200/60 dark:border-red-800/40 bg-red-50/80 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/40 shadow-sm';
 
   return (
     <div
@@ -222,8 +223,8 @@ const MessageCard: React.FC<{
       }`}
       onClick={onToggle}
     >
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">{children}</div>
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1 text-sm leading-relaxed">{children}</div>
         {onToggle && (
           <ExpandChevron
             expanded={!!expanded}
@@ -625,6 +626,15 @@ function DisplayConversationEntry({
         <ToolCallCard entry={entry} expansionKey={expansionKey} />
       </div>
     );
+  }
+
+  // Hide "System initialized with model" message
+  if (
+    isNormalizedEntry(entry) &&
+    entry.entry_type.type === 'system_message' &&
+    entry.content.startsWith('System initialized with model')
+  ) {
+    return null;
   }
 
   // Handle NormalizedEntry

@@ -121,8 +121,19 @@ impl ClaudeCode {
     }
 
     pub fn get_hooks(&self) -> Option<serde_json::Value> {
-        // Plan mode doesn't need hooks - we capture the plan from ExitPlanMode in exit monitor
-        if self.approvals.unwrap_or(false) {
+        // Plan mode needs hooks for ExitPlanMode approval
+        // Approvals mode needs hooks for all tool approvals
+        if self.plan.unwrap_or(false) {
+            // Plan mode: only hook ExitPlanMode for user approval
+            Some(serde_json::json!({
+                "PreToolUse": [
+                    {
+                        "matcher": "^ExitPlanMode$",
+                        "hookCallbackIds": ["tool_approval"],
+                    }
+                ]
+            }))
+        } else if self.approvals.unwrap_or(false) {
             Some(serde_json::json!({
                 "PreToolUse": [
                     {

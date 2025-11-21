@@ -20,7 +20,7 @@ export const TaskPanelHeaderActions = ({
   return (
     <>
       <ActionsDropdown task={task} sharedTask={sharedTask} />
-      <Button variant="icon" aria-label="Close" onClick={onClose}>
+      <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
         <X size={16} />
       </Button>
     </>

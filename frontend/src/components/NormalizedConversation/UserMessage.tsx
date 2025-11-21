@@ -75,40 +75,42 @@ const UserMessage = ({
   const editTitle = disabled && reason ? reason : 'Edit message';
 
   return (
-    <div className={`py-2 ${greyed ? 'opacity-50 pointer-events-none' : ''}`}>
-      <div className="group bg-background px-4 py-2 text-sm flex gap-2">
-        <div className="flex-1 py-3">
-          {showRetryEditor ? (
-            <RetryEditorInline
-              attempt={taskAttempt as TaskAttempt}
-              executionProcessId={executionProcessId as string}
-              initialVariant={null}
-              onCancelled={() => {
-                setIsEditing(false);
-              }}
-            />
-          ) : (
-            <MarkdownRenderer
-              content={content}
-              className="whitespace-pre-wrap break-words flex flex-col gap-1 font-light"
-            />
+    <div className={`px-4 py-2 ${greyed ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className="group rounded-xl border px-4 py-3.5 bg-slate-50/80 dark:bg-slate-900/50 border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            {showRetryEditor ? (
+              <RetryEditorInline
+                attempt={taskAttempt as TaskAttempt}
+                executionProcessId={executionProcessId as string}
+                initialVariant={null}
+                onCancelled={() => {
+                  setIsEditing(false);
+                }}
+              />
+            ) : (
+              <MarkdownRenderer
+                content={content}
+                className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+              />
+            )}
+          </div>
+          {executionProcessId && canFork && !showRetryEditor && (
+            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
+              <Button
+                onClick={startRetry}
+                variant="ghost"
+                className="p-2 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+                disabled={disabled}
+                title={editTitle}
+                aria-label="Edit message"
+                aria-disabled={disabled}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           )}
         </div>
-        {executionProcessId && canFork && !showRetryEditor && (
-          <div className="flex flex-col opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 pointer-events-none group-hover:pointer-events-auto">
-            <Button
-              onClick={startRetry}
-              variant="ghost"
-              className="p-2"
-              disabled={disabled}
-              title={editTitle}
-              aria-label="Edit message"
-              aria-disabled={disabled}
-            >
-              <Pencil className="w-3 h-3" />
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

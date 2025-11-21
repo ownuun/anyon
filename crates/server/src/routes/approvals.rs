@@ -4,7 +4,17 @@ use axum::{
     http::StatusCode,
     routing::post,
 };
+use db::models::{
+    execution_process::{ExecutionProcess, ExecutionProcessRunReason},
+    executor_session::ExecutorSession,
+    task::{Task, TaskStatus},
+};
 use deployment::Deployment;
+use executors::{
+    actions::{ExecutorAction, ExecutorActionType, coding_agent_follow_up::CodingAgentFollowUpRequest},
+    profile::to_default_variant,
+};
+use services::services::container::ContainerService;
 use utils::approvals::{ApprovalResponse, ApprovalStatus};
 
 use crate::DeploymentImpl;
@@ -30,6 +40,13 @@ pub async fn respond_to_approval(
                 )
                 .await;
 
+            // Handle ExitPlanMode approval: move to dev column and start implementation
+            if context.tool_name == "ExitPlanMode" && matches!(status, ApprovalStatus::Approved) {
+                if let Err(e) = handle_exit_plan_mode_approval(&deployment, context.execution_process_id).await {
+                    tracing::error!("Failed to handle ExitPlanMode approval: {:?}", e);
+                }
+            }
+
             Ok(Json(status))
         }
         Err(e) => {
@@ -37,6 +54,61 @@ pub async fn respond_to_approval(
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
+}
+
+async fn handle_exit_plan_mode_approval(
+    deployment: &DeploymentImpl,
+    execution_process_id: uuid::Uuid,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let pool = &deployment.db().pool;
+
+    // Load execution context
+    let ctx = ExecutionProcess::load_context(pool, execution_process_id).await?;
+
+    // Move task from Plan to InProgress (dev column)
+    if ctx.task.status == TaskStatus::Plan {
+        Task::update_status(pool, ctx.task.id, TaskStatus::InProgress).await?;
+        tracing::info!("Task {} moved from Plan to InProgress", ctx.task.id);
+    }
+
+    // Get the plan content from task
+    let plan = ctx.task.plan.ok_or("No plan found for task")?;
+
+    // Get executor profile from the current action
+    let action = ctx.execution_process.executor_action()?;
+    let executor_profile_id = match action.typ() {
+        ExecutorActionType::CodingAgentInitialRequest(req) => req.executor_profile_id.clone(),
+        ExecutorActionType::CodingAgentFollowUpRequest(req) => req.executor_profile_id.clone(),
+        _ => return Err("Not a coding agent action".into()),
+    };
+
+    // Get session ID for follow-up
+    let session = ExecutorSession::find_by_execution_process_id(pool, execution_process_id)
+        .await?
+        .ok_or("No executor session found")?;
+    let session_id = session.session_id.ok_or("No session ID in executor session")?;
+
+    // Create follow-up request with the plan as prompt
+    let default_profile = to_default_variant(&executor_profile_id);
+    let follow_up = CodingAgentFollowUpRequest {
+        prompt: format!("Execute the following plan:\n\n{}", plan),
+        session_id,
+        executor_profile_id: default_profile,
+    };
+    let new_action = ExecutorAction::new(
+        ExecutorActionType::CodingAgentFollowUpRequest(follow_up),
+        action.next_action().cloned().map(Box::new),
+    );
+
+    // Start the implementation execution
+    deployment.container().start_execution(
+        &ctx.task_attempt,
+        &new_action,
+        &ExecutionProcessRunReason::CodingAgent,
+    ).await?;
+
+    tracing::info!("Started implementation execution for task {}", ctx.task.id);
+    Ok(())
 }
 
 pub fn router() -> Router<DeploymentImpl> {
