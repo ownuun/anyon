@@ -311,6 +311,15 @@
           "helper": "디스크에 있는 git 저장소의 절대 경로입니다."
         }
       },
+      "agentBundle": {
+        "title": "Anyon Agent 번들 가져오기",
+        "description": "패키징된 anyon-agent 폴더를 선택한 프로젝트에 내려받아 `.serena`를 제외하고 덮어씁니다.",
+        "button": "프로젝트에 번들 가져오기",
+        "helper": "번들에 포함된 모든 폴더를 이 프로젝트에 복사하며 기존 파일을 덮어씁니다 (`.serena` 제외).",
+        "success": "번들을 가져왔습니다 ({{count}}개 파일 복사).",
+        "error": "번들을 가져오지 못했습니다.",
+        "confirm": "\"{{project}}\"에 Anyon agent 번들을 가져와 기존 파일을 덮어쓸까요? (`.serena` 제외)"
+      },
       "scripts": {
         "title": "스크립트 및 구성",
         "description": "이 프로젝트의 설정, 개발 및 정리 스크립트를 구성하세요.",

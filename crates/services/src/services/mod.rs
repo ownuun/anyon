@@ -1,3 +1,4 @@
+pub mod agent_bundle;
 pub mod analytics;
 pub mod approvals;
 pub mod auth;
@@ -15,6 +16,7 @@ pub mod github;
 pub mod image;
 pub mod notification;
 pub mod oauth_credentials;
+pub mod planning;
 pub mod pr_monitor;
 pub mod remote_client;
 pub mod share;

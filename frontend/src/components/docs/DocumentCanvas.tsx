@@ -3,14 +3,17 @@ import { DocumentCanvasHeader } from './DocumentCanvasHeader';
 import { DocumentEditor } from './DocumentEditor';
 import { useCallback, useState, useEffect } from 'react';
 
-export function DocumentCanvas() {
-  const {
-    openDocument,
-    closeDoc,
-    updateDoc,
-    deleteDoc,
-    isSaving,
-  } = useDocumentContext();
+interface DocumentCanvasProps {
+  disableTitleEdit?: boolean;
+  disableDelete?: boolean;
+}
+
+export function DocumentCanvas({
+  disableDelete = false,
+  disableTitleEdit = false,
+}: DocumentCanvasProps) {
+  const { openDocument, closeDoc, updateDoc, deleteDoc, isSaving } =
+    useDocumentContext();
 
   // Local content state for immediate updates
   const [localContent, setLocalContent] = useState('');
@@ -65,6 +68,8 @@ export function DocumentCanvas() {
         onDelete={handleDelete}
         onTitleChange={handleTitleChange}
         isSaving={isSaving}
+        disableDelete={disableDelete}
+        disableTitleEdit={disableTitleEdit}
       />
 
       <div className="flex-1 overflow-hidden">

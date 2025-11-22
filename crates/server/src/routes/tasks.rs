@@ -30,6 +30,7 @@ use serde::{Deserialize, Serialize};
 use services::services::{
     container::{ContainerService, WorktreeCleanupData, cleanup_worktrees_direct},
     share::ShareError,
+    planning,
 };
 use sqlx::Error as SqlxError;
 use ts_rs::TS;
@@ -171,10 +172,14 @@ pub async fn create_task_and_start(
         )
         .await;
     let attempt_id = Uuid::new_v4();
-    let git_branch_name = deployment
-        .container()
-        .git_branch_from_task_attempt(&attempt_id, &task.title)
-        .await;
+    let git_branch_name = if planning::is_planning_task(&task) {
+        payload.base_branch.clone()
+    } else {
+        deployment
+            .container()
+            .git_branch_from_task_attempt(&attempt_id, &task.title)
+            .await
+    };
 
     let task_attempt = TaskAttempt::create(
         &deployment.db().pool,
@@ -291,19 +296,23 @@ pub async fn delete_task(
         .await?
         .ok_or_else(|| ApiError::Database(SqlxError::RowNotFound))?;
 
-    let cleanup_data: Vec<WorktreeCleanupData> = attempts
-        .iter()
-        .filter_map(|attempt| {
-            attempt
-                .container_ref
-                .as_ref()
-                .map(|worktree_path| WorktreeCleanupData {
-                    attempt_id: attempt.id,
-                    worktree_path: PathBuf::from(worktree_path),
-                    git_repo_path: Some(project.git_repo_path.clone()),
-                })
-        })
-        .collect();
+    let cleanup_data: Vec<WorktreeCleanupData> = if planning::is_planning_task(&task) {
+        vec![]
+    } else {
+        attempts
+            .iter()
+            .filter_map(|attempt| {
+                attempt
+                    .container_ref
+                    .as_ref()
+                    .map(|worktree_path| WorktreeCleanupData {
+                        attempt_id: attempt.id,
+                        worktree_path: PathBuf::from(worktree_path),
+                        git_repo_path: Some(project.git_repo_path.clone()),
+                    })
+            })
+            .collect()
+    };
 
     if let Some(shared_task_id) = task.shared_task_id {
         let Ok(publisher) = deployment.share_publisher() else {

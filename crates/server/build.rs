@@ -10,7 +10,10 @@ fn main() {
         println!("cargo:rustc-env=POSTHOG_API_ENDPOINT={}", api_endpoint);
     }
     if let Ok(anyon_shared_api_base) = std::env::var("ANYON_SHARED_API_BASE") {
-        println!("cargo:rustc-env=ANYON_SHARED_API_BASE={}", anyon_shared_api_base);
+        println!(
+            "cargo:rustc-env=ANYON_SHARED_API_BASE={}",
+            anyon_shared_api_base
+        );
     }
 
     // Create frontend/dist directory if it doesn't exist

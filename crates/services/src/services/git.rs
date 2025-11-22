@@ -179,8 +179,9 @@ impl GitService {
     ) -> Result<git2::Signature<'a>, GitServiceError> {
         match repo.signature() {
             Ok(sig) => Ok(sig),
-            Err(_) => git2::Signature::now("Anyon", "noreply@anyon.dev")
-                .map_err(GitServiceError::from),
+            Err(_) => {
+                git2::Signature::now("Anyon", "noreply@anyon.dev").map_err(GitServiceError::from)
+            }
         }
     }
 

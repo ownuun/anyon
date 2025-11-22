@@ -27,6 +27,7 @@ import { useScriptPlaceholders } from '@/hooks/useScriptPlaceholders';
 import { CopyFilesField } from '@/components/projects/CopyFilesField';
 import { AutoExpandingTextarea } from '@/components/ui/auto-expanding-textarea';
 import { FolderPickerDialog } from '@/components/dialogs/shared/FolderPickerDialog';
+import { projectsApi } from '@/lib/api';
 import type { Project, UpdateProject } from 'shared/types';
 
 interface ProjectFormState {
@@ -72,6 +73,9 @@ export function ProjectSettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Get OS-appropriate script placeholders
   const placeholders = useScriptPlaceholders();
@@ -100,6 +104,8 @@ export function ProjectSettings() {
         setSelectedProject(null);
         setSuccess(false);
         setError(null);
+        setImportMessage(null);
+        setImportError(null);
       }
 
       // Update state and URL
@@ -168,6 +174,8 @@ export function ProjectSettings() {
     if (hasUnsavedChanges) return;
 
     setDraft(projectToFormState(nextProject));
+    setImportMessage(null);
+    setImportError(null);
   }, [projects, selectedProjectId, hasUnsavedChanges]);
 
   // Warn on tab close/navigation with unsaved changes
@@ -237,6 +245,38 @@ export function ProjectSettings() {
       if (!prev) return prev;
       return { ...prev, ...updates };
     });
+  };
+
+  const handleImportAgentBundle = async () => {
+    if (!selectedProject) return;
+
+    const confirmed = window.confirm(
+      t('settings.projects.agentBundle.confirm', {
+        project: selectedProject.name,
+      })
+    );
+
+    if (!confirmed) return;
+
+    setImporting(true);
+    setImportError(null);
+    setImportMessage(null);
+
+    try {
+      const res = await projectsApi.importAgentBundle(selectedProject.id);
+      setImportMessage(
+        t('settings.projects.agentBundle.success', { count: res.copied_files })
+      );
+    } catch (err) {
+      console.error('Failed to import agent bundle:', err);
+      setImportError(
+        err instanceof Error
+          ? err.message
+          : t('settings.projects.agentBundle.error')
+      );
+    } finally {
+      setImporting(false);
+    }
   };
 
   if (projectsLoading) {
@@ -384,6 +424,40 @@ export function ProjectSettings() {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t('settings.projects.general.repoPath.helper')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('settings.projects.agentBundle.title')}</CardTitle>
+              <CardDescription>
+                {t('settings.projects.agentBundle.description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {importError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{importError}</AlertDescription>
+                </Alert>
+              )}
+
+              {importMessage && (
+                <Alert variant="success">
+                  <AlertDescription className="font-medium">
+                    {importMessage}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex items-center gap-3">
+                <Button onClick={handleImportAgentBundle} disabled={importing}>
+                  {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {t('settings.projects.agentBundle.button')}
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.projects.agentBundle.helper')}
                 </p>
               </div>
             </CardContent>

@@ -218,6 +218,12 @@ export const handleApiResponse = async <T, E = T>(response: Response): Promise<T
   return result.data as T;
 };
 
+export type ImportAgentBundleResponse = {
+  copied_files: number;
+  removed_entries: number;
+  version: string;
+};
+
 // Project Management APIs
 export const projectsApi = {
   getAll: async (): Promise<Project[]> => {
@@ -322,6 +328,20 @@ export const projectsApi = {
       method: 'DELETE',
     });
     return handleApiResponse<Project>(response);
+  },
+
+  importAgentBundle: async (
+    projectId: string,
+    version?: string
+  ): Promise<ImportAgentBundleResponse> => {
+    const response = await makeRequest(
+      `/api/projects/${projectId}/agent-bundle/import`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ version: version ?? null }),
+      }
+    );
+    return handleApiResponse<ImportAgentBundleResponse>(response);
   },
 };
 

@@ -1,4 +1,4 @@
-export type DocumentCategory = 'planning' | 'design' | 'technology';
+export type DocumentCategory = 'planning' | 'design' | 'technology' | 'conversation';
 
 export interface Document {
   id: string; // UUID

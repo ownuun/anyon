@@ -311,6 +311,15 @@
           "helper": "The absolute path to your git repository on disk."
         }
       },
+      "agentBundle": {
+        "title": "Import Anyon Agent Bundle",
+        "description": "Download and overlay the Anyon agent folders into the selected project (everything except .serena).",
+        "button": "Import bundle into project",
+        "helper": "Imports all folders from the packaged anyon-agent bundle and overwrites existing files in this project (excluding .serena).",
+        "success": "Bundle imported ({{count}} files copied).",
+        "error": "Failed to import bundle.",
+        "confirm": "Import the Anyon agent bundle into \"{{project}}\" and overwrite existing files (excluding .serena)?"
+      },
       "scripts": {
         "title": "Scripts & Configuration",
         "description": "Configure setup, development, and cleanup scripts for this project.",

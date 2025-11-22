@@ -22,22 +22,34 @@ use crate::{DeploymentImpl, error::ApiError, middleware::load_project_middleware
 const DOCS_FOLDER: &str = "anyon-docs";
 
 // Category mapping
+const DEFAULT_CATEGORY: &str = "planning";
+const CATEGORY_FOLDERS: &[(&str, &str)] = &[
+    ("planning", "plan"),
+    ("design", "design"),
+    ("technology", "tech"),
+    ("conversation", "conversation"),
+];
+
 fn category_to_folder(category: &str) -> &str {
-    match category {
-        "planning" => "plan",
-        "design" => "design",
-        "technology" => "tech",
-        _ => "plan",
+    for (cat, folder) in CATEGORY_FOLDERS {
+        if *cat == category {
+            return folder;
+        }
     }
+    CATEGORY_FOLDERS
+        .iter()
+        .find(|(cat, _)| *cat == DEFAULT_CATEGORY)
+        .map(|(_, folder)| *folder)
+        .unwrap_or("plan")
 }
 
 fn folder_to_category(folder: &str) -> &str {
-    match folder {
-        "plan" => "planning",
-        "design" => "design",
-        "tech" => "technology",
-        _ => "planning",
+    for (cat, f) in CATEGORY_FOLDERS {
+        if *f == folder {
+            return cat;
+        }
     }
+    DEFAULT_CATEGORY
 }
 
 // Generate deterministic UUID from file path
@@ -67,6 +79,31 @@ async fn ensure_category_folder(project: &Project, category: &str) -> Result<Pat
     let path = get_docs_path(project).join(folder);
     fs::create_dir_all(&path).await?;
     Ok(path)
+}
+
+// Ensure fixed conversation docs exist (empty templates)
+async fn ensure_conversation_docs(project: &Project) -> Result<(), ApiError> {
+    let folder = category_to_folder("conversation");
+    let path = get_docs_path(project).join(folder);
+    fs::create_dir_all(&path).await?;
+
+    const FILES: &[&str] = &[
+        "prd.md",
+        "ux-design.md",
+        "design-guide.md",
+        "trd.md",
+        "architecture.md",
+        "erd.md",
+    ];
+
+    for file in FILES {
+        let file_path = path.join(file);
+        if !file_path.exists() {
+            fs::write(&file_path, "").await?;
+        }
+    }
+
+    Ok(())
 }
 
 // Sanitize filename
@@ -167,13 +204,18 @@ pub async fn list_documents(
     Extension(project): Extension<Project>,
     Query(params): Query<DocumentQueryParams>,
 ) -> Result<ResponseJson<ApiResponse<DocumentListResponse>>, ApiError> {
+    // If requesting conversation docs, ensure fixed files exist
+    if params.category.as_deref() == Some("conversation") {
+        ensure_conversation_docs(&project).await?;
+    }
+
     let docs_path = get_docs_path(&project);
     let mut items = Vec::new();
 
     let categories = if let Some(ref cat) = params.category {
         vec![category_to_folder(cat)]
     } else {
-        vec!["plan", "design", "tech"]
+        vec!["plan", "design", "tech"] // keep existing default categories for main Docs tab
     };
 
     for category_folder in categories {
@@ -213,10 +255,13 @@ pub async fn get_document(
     Extension(project): Extension<Project>,
     Path(params): Path<DocumentPathParams>,
 ) -> Result<ResponseJson<ApiResponse<Document>>, ApiError> {
+    // Ensure conversation docs are present before search (covers direct get by ID)
+    ensure_conversation_docs(&project).await?;
+
     let docs_path = get_docs_path(&project);
 
     // Search in all category folders
-    for category_folder in ["plan", "design", "tech"] {
+    for category_folder in CATEGORY_FOLDERS.iter().map(|(_, folder)| *folder) {
         let category_path = docs_path.join(category_folder);
 
         if !category_path.exists() {
@@ -297,10 +342,13 @@ pub async fn update_document(
     Path(params): Path<DocumentPathParams>,
     Json(payload): Json<UpdateDocument>,
 ) -> Result<ResponseJson<ApiResponse<Document>>, ApiError> {
+    // Ensure conversation docs directory exists (for moves or new category)
+    ensure_conversation_docs(&project).await?;
+
     let docs_path = get_docs_path(&project);
 
     // Find the document
-    for category_folder in ["plan", "design", "tech"] {
+    for category_folder in CATEGORY_FOLDERS.iter().map(|(_, folder)| *folder) {
         let category_path = docs_path.join(category_folder);
 
         if !category_path.exists() {
@@ -380,9 +428,12 @@ pub async fn delete_document(
     Extension(project): Extension<Project>,
     Path(params): Path<DocumentPathParams>,
 ) -> Result<ResponseJson<ApiResponse<()>>, ApiError> {
+    // Ensure conversation docs directory exists for consistency
+    ensure_conversation_docs(&project).await?;
+
     let docs_path = get_docs_path(&project);
 
-    for category_folder in ["plan", "design", "tech"] {
+    for category_folder in CATEGORY_FOLDERS.iter().map(|(_, folder)| *folder) {
         let category_path = docs_path.join(category_folder);
 
         if !category_path.exists() {

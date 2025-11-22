@@ -11,6 +11,8 @@ interface DocumentCanvasHeaderProps {
   onDelete: () => void | Promise<void>;
   onTitleChange: (title: string) => void | Promise<void>;
   isSaving?: boolean;
+  disableTitleEdit?: boolean;
+  disableDelete?: boolean;
 }
 
 export function DocumentCanvasHeader({
@@ -20,6 +22,8 @@ export function DocumentCanvasHeader({
   onDelete,
   onTitleChange,
   isSaving = false,
+  disableTitleEdit = false,
+  disableDelete = false,
 }: DocumentCanvasHeaderProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(document.title);
@@ -64,14 +68,16 @@ export function DocumentCanvasHeader({
         ) : (
           <div className="flex items-center gap-2 group">
             <h2 className="text-lg font-semibold">{document.title}</h2>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsEditingTitle(true)}
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Edit2 className="h-3 w-3" />
-            </Button>
+            {!disableTitleEdit && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditingTitle(true)}
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            )}
           </div>
         )}
 
@@ -96,15 +102,17 @@ export function DocumentCanvasHeader({
           <span>Save</span>
         </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onDelete}
-          className="gap-2 text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-          <span>Delete</span>
-        </Button>
+        {!disableDelete && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="gap-2 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>Delete</span>
+          </Button>
+        )}
 
         <div className="w-px h-6 bg-border mx-1" />
 

@@ -15,6 +15,7 @@ interface DocumentContextType {
   openDocument: Document | null;
   isLoading: boolean;
   isSaving: boolean;
+  category?: DocumentCategory;
 
   // Actions
   loadDocuments: () => Promise<void>;
@@ -38,9 +39,10 @@ export function useDocumentContext() {
 interface DocumentProviderProps {
   children: React.ReactNode;
   projectId: string;
+  category?: DocumentCategory;
 }
 
-export function DocumentProvider({ children, projectId }: DocumentProviderProps) {
+export function DocumentProvider({ children, projectId, category }: DocumentProviderProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [openDocument, setOpenDocument] = useState<Document | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +52,7 @@ export function DocumentProvider({ children, projectId }: DocumentProviderProps)
     setIsLoading(true);
     setOpenDocument(null);
     try {
-      const { items } = await listDocuments(projectId);
+      const { items } = await listDocuments(projectId, category ? { category } : undefined);
       setDocuments(items);
     } catch (error) {
       console.error('Failed to load documents:', error);
@@ -58,7 +60,7 @@ export function DocumentProvider({ children, projectId }: DocumentProviderProps)
     } finally {
       setIsLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, category]);
 
   // Load documents on mount
   useEffect(() => {
@@ -183,6 +185,7 @@ export function DocumentProvider({ children, projectId }: DocumentProviderProps)
     createDoc,
     updateDoc,
     deleteDoc,
+    category,
   };
 
   return (

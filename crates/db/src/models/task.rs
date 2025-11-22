@@ -135,13 +135,12 @@ pub struct UpdateTask {
 
 impl Task {
     pub fn to_prompt(&self) -> String {
-        let base_prompt = if let Some(description) =
-            self.description.as_ref().filter(|d| !d.trim().is_empty())
-        {
-            format!("{}\n\n{}", &self.title, description)
-        } else {
-            self.title.clone()
-        };
+        let base_prompt =
+            if let Some(description) = self.description.as_ref().filter(|d| !d.trim().is_empty()) {
+                format!("{}\n\n{}", &self.title, description)
+            } else {
+                self.title.clone()
+            };
 
         // If there's a plan from plan mode, prepend it to the prompt
         if let Some(plan) = self.plan.as_ref().filter(|p| !p.trim().is_empty()) {

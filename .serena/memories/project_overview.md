@@ -1,0 +1,6 @@
+# Project Overview
+- Purpose: AI-powered coding/task runner platform (Anyon) with backend services (Axum/SQLx) and React frontend; integrates AI executors (Claude, Gemini, etc.), SSE event streams, Git worktree isolation, and MCP server endpoints for agent control.
+- Tech stack: Rust (Axum, Tokio, SQLx, ts-rs), React 18 + TypeScript + Vite + Tailwind/shadcn/ui, SQLite DB, Mintlify docs. Type sharing via ts-rs -> generated `shared/types.ts`.
+- Structure: Rust workspace in `crates/` (server, db, executors, services, utils, deployment/local-deployment, remote); frontend in `frontend/src`; shared generated TS types in `shared/types.ts`; assets in `assets`, `dev_assets_seed`, `dev_assets`; npm CLI packaging in `npx-cli`; scripts for ports/DB in `scripts/`; docs in `docs/` (Mintlify).
+- Key patterns: SSE streams for logs/diffs; WorktreeManager for isolated git worktrees; executor interface for AI providers; MCP server with project/task tools; Rust types drive TS types via `generate_types` bin.
+- Env: `.env` for local overrides; key vars `FRONTEND_PORT`, `BACKEND_PORT`, `HOST`; dev ports managed by `scripts/setup-dev-environment.js`. Default node>=18, pnpm>=8.

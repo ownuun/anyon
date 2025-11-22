@@ -1,0 +1,12 @@
+# Suggested Commands
+- Install deps: `pnpm i`
+- Dev servers (frontend+backend): `pnpm run dev`
+- Frontend dev only: `pnpm run frontend:dev` (uses `FRONTEND_PORT`)
+- Backend dev watch: `pnpm run backend:dev:watch` (auto port via script)
+- Checks: `pnpm run check` (frontend + backend)
+- Linting: `pnpm run frontend:lint`; `pnpm run backend:lint` (clippy)
+- Type gen: `pnpm run generate-types` (or `generate-types:check`)
+- Rust tests: `cargo test --workspace`
+- DB prep: `pnpm run prepare-db` (or `remote:prepare-db` under `crates/remote`)
+- NPX package build: `pnpm run build:npx`; `pnpm pack` in `npx-cli/`
+- Docs (Mintlify): `cd docs && mint dev`

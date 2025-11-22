@@ -43,6 +43,7 @@ use uuid::Uuid;
 use crate::services::{
     git::{GitService, GitServiceError},
     image::ImageService,
+    planning,
     share::SharePublisher,
     worktree_manager::{WorktreeError, WorktreeManager},
 };
@@ -531,7 +532,12 @@ pub trait ContainerService {
                 .as_ref()
                 .ok_or_else(|| ContainerError::Other(anyhow!("Container ref not found")))?,
         );
-        let prompt = ImageService::canonicalise_image_paths(&task.to_prompt(), &worktree_path);
+        let mut prompt =
+            ImageService::canonicalise_image_paths(&task.to_prompt(), &worktree_path);
+        if planning::is_planning_task(&task) {
+            // Avoid sending the planning task's title/description as the initial prompt
+            prompt = String::new();
+        }
 
         let cleanup_action = self.cleanup_action(project.cleanup_script);
 

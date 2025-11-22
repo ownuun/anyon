@@ -164,9 +164,10 @@ impl Approvals {
 
             // Extract plan from PlanPresentation action type if present
             let plan = match &p.entry.entry_type {
-                NormalizedEntryType::ToolUse { action_type: ActionType::PlanPresentation { plan }, .. } => {
-                    Some(plan.clone())
-                }
+                NormalizedEntryType::ToolUse {
+                    action_type: ActionType::PlanPresentation { plan },
+                    ..
+                } => Some(plan.clone()),
                 _ => None,
             };
 
@@ -268,7 +269,10 @@ impl Approvals {
     }
 
     /// Find a pending ExitPlanMode approval for the given execution process
-    pub fn find_pending_exit_plan_mode(&self, execution_process_id: Uuid) -> Option<(String, String)> {
+    pub fn find_pending_exit_plan_mode(
+        &self,
+        execution_process_id: Uuid,
+    ) -> Option<(String, String)> {
         for entry in self.pending.iter() {
             let pending = entry.value();
             if pending.execution_process_id == execution_process_id
@@ -276,9 +280,10 @@ impl Approvals {
             {
                 // Extract plan from PlanPresentation action type
                 let plan = match &pending.entry.entry_type {
-                    NormalizedEntryType::ToolUse { action_type: ActionType::PlanPresentation { plan }, .. } => {
-                        Some(plan.clone())
-                    }
+                    NormalizedEntryType::ToolUse {
+                        action_type: ActionType::PlanPresentation { plan },
+                        ..
+                    } => Some(plan.clone()),
                     _ => None,
                 };
                 if let Some(plan) = plan {

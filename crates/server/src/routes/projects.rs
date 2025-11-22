@@ -14,8 +14,9 @@ use db::models::{
 };
 use deployment::Deployment;
 use ignore::WalkBuilder;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use services::services::{
+    agent_bundle::{AgentBundleError, AgentBundleService, AgentBundleSettings},
     file_ranker::FileRanker,
     file_search_cache::{CacheError, SearchMode, SearchQuery},
     git::GitBranch,
@@ -43,6 +44,17 @@ pub struct CreateRemoteProjectRequest {
     pub name: String,
 }
 
+#[derive(Deserialize, TS)]
+pub struct ImportAgentBundleRequest {
+    pub version: Option<String>,
+}
+
+#[derive(Serialize, TS)]
+pub struct ImportAgentBundleResponse {
+    pub copied_files: usize,
+    pub removed_entries: usize,
+    pub version: String,
+}
 pub async fn get_projects(
     State(deployment): State<DeploymentImpl>,
 ) -> Result<ResponseJson<ApiResponse<Vec<Project>>>, ApiError> {
@@ -62,6 +74,41 @@ pub async fn get_project_branches(
 ) -> Result<ResponseJson<ApiResponse<Vec<GitBranch>>>, ApiError> {
     let branches = deployment.git().get_all_branches(&project.git_repo_path)?;
     Ok(ResponseJson(ApiResponse::success(branches)))
+}
+
+pub async fn import_agent_bundle(
+    Extension(project): Extension<Project>,
+    Json(payload): Json<ImportAgentBundleRequest>,
+) -> Result<ResponseJson<ApiResponse<ImportAgentBundleResponse>>, ApiError> {
+    let settings = AgentBundleSettings::from_env();
+    let service = AgentBundleService::new(settings);
+
+    let result = service
+        .import_into_project(&project.git_repo_path, payload.version.clone())
+        .await
+        .map_err(map_agent_bundle_error)?;
+
+    Ok(ResponseJson(ApiResponse::success(
+        ImportAgentBundleResponse {
+            copied_files: result.copied_files,
+            removed_entries: result.removed_entries,
+            version: result.version,
+        },
+    )))
+}
+
+fn map_agent_bundle_error(err: AgentBundleError) -> ApiError {
+    match err {
+        AgentBundleError::DestinationMissing => {
+            ApiError::BadRequest("Project path does not exist".to_string())
+        }
+        AgentBundleError::MissingVersion => ApiError::BadRequest(err.to_string()),
+        AgentBundleError::ChecksumMismatch { .. } => ApiError::Conflict(err.to_string()),
+        AgentBundleError::Download(_) => ApiError::BadRequest(err.to_string()),
+        AgentBundleError::Decompression(_) | AgentBundleError::Io(_) => {
+            ApiError::BadRequest(err.to_string())
+        }
+    }
 }
 
 pub async fn link_project_to_existing_remote(
@@ -664,6 +711,7 @@ pub fn router(deployment: &DeploymentImpl) -> Router<DeploymentImpl> {
         .route("/branches", get(get_project_branches))
         .route("/search", get(search_project_files))
         .route("/open-editor", post(open_project_in_editor))
+        .route("/agent-bundle/import", post(import_agent_bundle))
         .route(
             "/link",
             post(link_project_to_existing_remote).delete(unlink_project),

@@ -48,6 +48,7 @@ use services::services::{
     git::{Commit, DiffTarget, GitService},
     image::ImageService,
     notification::NotificationService,
+    planning,
     share::SharePublisher,
     worktree_manager::WorktreeManager,
 };
@@ -943,6 +944,26 @@ impl ContainerService for LocalContainerService {
             .await?
             .ok_or(sqlx::Error::RowNotFound)?;
 
+        // Planning conversations should reuse the project's main worktree/branch
+        if planning::is_planning_task(&task) {
+            let repo_path = PathBuf::from(&project.git_repo_path);
+            if !repo_path.exists() {
+                return Err(ContainerError::Other(anyhow!(
+                    "Project repository path does not exist: {}",
+                    repo_path.display()
+                )));
+            }
+
+            TaskAttempt::update_container_ref(
+                &self.db.pool,
+                task_attempt.id,
+                &repo_path.to_string_lossy(),
+            )
+            .await?;
+
+            return Ok(repo_path.to_string_lossy().to_string());
+        }
+
         WorktreeManager::create_worktree(
             &project.git_repo_path,
             &task_attempt.branch,
@@ -989,6 +1010,10 @@ impl ContainerService for LocalContainerService {
             .parent_task(&self.db.pool)
             .await?
             .ok_or(sqlx::Error::RowNotFound)?;
+        if planning::is_planning_task(&task) {
+            // Planning conversations reuse the main repo; never delete it.
+            return Ok(());
+        }
         let git_repo_path = match Project::find_by_id(&self.db.pool, task.project_id).await {
             Ok(Some(project)) => Some(project.git_repo_path.clone()),
             Ok(None) => None,
@@ -1026,6 +1051,27 @@ impl ContainerService for LocalContainerService {
             .parent_project(&self.db.pool)
             .await?
             .ok_or(sqlx::Error::RowNotFound)?;
+
+        if planning::is_planning_task(&task) {
+            let repo_path = PathBuf::from(&project.git_repo_path);
+            if !repo_path.exists() {
+                return Err(ContainerError::Other(anyhow!(
+                    "Project repository path does not exist: {}",
+                    repo_path.display()
+                )));
+            }
+
+            if task_attempt.container_ref.is_none() {
+                TaskAttempt::update_container_ref(
+                    &self.db.pool,
+                    task_attempt.id,
+                    &repo_path.to_string_lossy(),
+                )
+                .await?;
+            }
+
+            return Ok(repo_path.to_string_lossy().to_string());
+        }
 
         let container_ref = task_attempt.container_ref.as_ref().ok_or_else(|| {
             ContainerError::Other(anyhow!("Container ref not found for task attempt"))
@@ -1153,7 +1199,8 @@ impl ContainerService for LocalContainerService {
                 ctx.execution_process.run_reason,
                 ExecutionProcessRunReason::DevServer
             )
-            && ctx.task.status != TaskStatus::Plan // Don't change Plan status
+            && ctx.task.status != TaskStatus::Plan
+        // Don't change Plan status
         {
             match Task::update_status(&self.db.pool, ctx.task.id, TaskStatus::InReview).await {
                 Ok(_) => {

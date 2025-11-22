@@ -69,6 +69,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { AttemptHeaderActions } from '@/components/panels/AttemptHeaderActions';
 import { TaskPanelHeaderActions } from '@/components/panels/TaskPanelHeaderActions';
+import { isPlanningTask } from '@/constants/planning';
 
 import type { TaskWithAttemptStatus, TaskStatus } from 'shared/types';
 
@@ -369,6 +370,10 @@ export function ProjectTasks() {
     };
 
     tasks.forEach((task) => {
+      if (isPlanningTask({ title: task.title, description: task.description })) {
+        return;
+      }
+
       const statusKey = normalizeStatus(task.status);
       const sharedTask = task.shared_task_id
         ? sharedTasksById[task.shared_task_id]
