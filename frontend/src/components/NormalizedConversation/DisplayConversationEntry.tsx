@@ -34,6 +34,7 @@ import PendingApprovalEntry from './PendingApprovalEntry';
 import { NextActionCard } from './NextActionCard';
 import { cn } from '@/lib/utils';
 import { useRetryUi } from '@/contexts/RetryUiContext';
+import { isPlanningTask } from '@/constants/planning';
 
 type Props = {
   entry: NormalizedEntry | ProcessStartPayload;
@@ -635,6 +636,35 @@ function DisplayConversationEntry({
     entry.content.startsWith('System initialized with model')
   ) {
     return null;
+  }
+
+  // Hide initial greeting message for planning tasks
+  if (
+    isNormalizedEntry(entry) &&
+    entry.entry_type.type === 'assistant_message' &&
+    task &&
+    isPlanningTask({ title: task.title, description: task.description })
+  ) {
+    // Check if this is the initial greeting before workflow execution
+    const content = entry.content.toLowerCase();
+    const hasGreetingPattern =
+      content.includes("i'm ready to help") ||
+      content.includes("i'll help you") ||
+      content.includes('ready to help') ||
+      content.includes('ready to assist');
+
+    // Also check if it's a short message without code blocks or workflow indicators
+    const hasWorkflowIndicator =
+      content.includes("i'll execute") ||
+      content.includes("i'm executing") ||
+      content.includes('workflow') ||
+      content.includes('step 0') ||
+      content.includes('```');
+
+    // Hide if it has greeting pattern and no workflow indicator
+    if (hasGreetingPattern && !hasWorkflowIndicator) {
+      return null;
+    }
   }
 
   // Handle NormalizedEntry
