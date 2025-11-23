@@ -56,6 +56,7 @@ function usePlanningSession(
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const creationRequestedRef = useRef<number | null>(null);
+  const createInFlightRef = useRef(false);
 
   const planningTask = useMemo(() => {
     const planningTasks = Object.values(tasksById).filter(
@@ -88,23 +89,22 @@ function usePlanningSession(
     })[0];
   }, [attempts]);
 
+  // Cleanup when project changes to prevent state leakage
   useEffect(() => {
-    if (planningTask) {
-      creationRequestedRef.current = activationNonce ?? null;
-    }
-  }, [planningTask, activationNonce]);
-
-  useEffect(() => {
-    setCreateError(null);
-    setCreating(false);
-    creationRequestedRef.current = null;
-  }, [activationNonce]);
+    return () => {
+      setCreateError(null);
+      setCreating(false);
+      creationRequestedRef.current = null;
+      createInFlightRef.current = false;
+    };
+  }, [projectId]);
 
   useEffect(() => {
     if (!projectId) return;
     if (!activated) return;
     if (creating) return;
     if (creationRequestedRef.current === activationNonce) return;
+    if (createInFlightRef.current) return;
     if (branchesLoading) return;
     if (!branches.length) {
       setCreateError('브랜치 정보를 불러오지 못했습니다.');
@@ -123,11 +123,22 @@ function usePlanningSession(
     }
 
     creationRequestedRef.current = activationNonce ?? null;
+    createInFlightRef.current = true;
     setCreating(true);
     setCreateError(null);
 
     const createPlanningTask = async () => {
       try {
+        // Stop old planning attempt if it exists
+        if (planningTask && latestAttempt) {
+          try {
+            await attemptsApi.stop(latestAttempt.id);
+          } catch (err) {
+            // Continue anyway - stopping old attempt is not critical
+            console.warn('Failed to stop old planning attempt:', err);
+          }
+        }
+
         await tasksApi.createAndStart({
           task: {
             project_id: projectId,
@@ -147,6 +158,7 @@ function usePlanningSession(
           '기획 대화 세션 생성에 실패했습니다.';
         setCreateError(msg);
       } finally {
+        createInFlightRef.current = false;
         setCreating(false);
       }
     };
@@ -160,6 +172,8 @@ function usePlanningSession(
     creating,
     projectId,
     activationNonce,
+    planningTask,
+    latestAttempt,
   ]);
 
   const isLoading =
