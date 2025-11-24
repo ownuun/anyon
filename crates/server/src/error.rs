@@ -1,3 +1,5 @@
+use std::io::ErrorKind;
+
 use axum::{
     Json,
     extract::multipart::MultipartError,
@@ -136,7 +138,10 @@ impl IntoResponse for ApiError {
                     (StatusCode::INTERNAL_SERVER_ERROR, "ExecutionProcessError")
                 }
             },
-            ApiError::Io(_) => (StatusCode::INTERNAL_SERVER_ERROR, "IoError"),
+            ApiError::Io(io_err) => match io_err.kind() {
+                ErrorKind::PermissionDenied => (StatusCode::FORBIDDEN, "IoError"),
+                _ => (StatusCode::INTERNAL_SERVER_ERROR, "IoError"),
+            },
             ApiError::EditorOpen(err) => match err {
                 EditorOpenError::LaunchFailed { .. } => {
                     (StatusCode::INTERNAL_SERVER_ERROR, "EditorLaunchError")
@@ -264,6 +269,12 @@ impl IntoResponse for ApiError {
                 DraftsServiceError::ExecutionProcess(_) => {
                     format!("{}: {}", error_type, drafts_err)
                 }
+            },
+            ApiError::Io(io_err) => match io_err.kind() {
+                ErrorKind::PermissionDenied => {
+                    "문서 경로에 접근할 권한이 없습니다. macOS 전체 디스크 접근 또는 폴더 권한을 확인하세요.".to_string()
+                }
+                _ => format!("{}: {}", error_type, self),
             },
             _ => format!("{}: {}", error_type, self),
         };

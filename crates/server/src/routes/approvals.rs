@@ -11,7 +11,9 @@ use db::models::{
 };
 use deployment::Deployment;
 use executors::{
-    actions::{ExecutorAction, ExecutorActionType, coding_agent_follow_up::CodingAgentFollowUpRequest},
+    actions::{
+        ExecutorAction, ExecutorActionType, coding_agent_follow_up::CodingAgentFollowUpRequest,
+    },
     profile::to_default_variant,
 };
 use services::services::container::ContainerService;
@@ -43,7 +45,13 @@ pub async fn respond_to_approval(
             // Handle ExitPlanMode approval: move to dev column and start implementation
             if context.tool_name == "ExitPlanMode" && matches!(status, ApprovalStatus::Approved) {
                 if let Some(plan) = context.plan {
-                    if let Err(e) = handle_exit_plan_mode_approval(&deployment, context.execution_process_id, plan).await {
+                    if let Err(e) = handle_exit_plan_mode_approval(
+                        &deployment,
+                        context.execution_process_id,
+                        plan,
+                    )
+                    .await
+                    {
                         tracing::error!("Failed to handle ExitPlanMode approval: {:?}", e);
                     }
                 } else {
@@ -92,7 +100,9 @@ async fn handle_exit_plan_mode_approval(
     let session = ExecutorSession::find_by_execution_process_id(pool, execution_process_id)
         .await?
         .ok_or("No executor session found")?;
-    let session_id = session.session_id.ok_or("No session ID in executor session")?;
+    let session_id = session
+        .session_id
+        .ok_or("No session ID in executor session")?;
 
     // Create follow-up request with the plan as prompt
     let default_profile = to_default_variant(&executor_profile_id);
@@ -107,11 +117,14 @@ async fn handle_exit_plan_mode_approval(
     );
 
     // Start the implementation execution
-    deployment.container().start_execution(
-        &ctx.task_attempt,
-        &new_action,
-        &ExecutionProcessRunReason::CodingAgent,
-    ).await?;
+    deployment
+        .container()
+        .start_execution(
+            &ctx.task_attempt,
+            &new_action,
+            &ExecutionProcessRunReason::CodingAgent,
+        )
+        .await?;
 
     tracing::info!("Started implementation execution for task {}", ctx.task.id);
     Ok(())

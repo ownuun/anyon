@@ -21,20 +21,21 @@ use db::models::{
 };
 use deployment::Deployment;
 use executors::{
-    actions::{ExecutorAction, ExecutorActionType, coding_agent_follow_up::CodingAgentFollowUpRequest},
+    actions::{
+        ExecutorAction, ExecutorActionType, coding_agent_follow_up::CodingAgentFollowUpRequest,
+    },
     profile::{ExecutorProfileId, to_default_variant},
 };
-use utils::approvals::ApprovalStatus as ApprovalStatusUtil;
 use futures_util::{SinkExt, StreamExt, TryStreamExt};
 use serde::{Deserialize, Serialize};
 use services::services::{
     container::{ContainerService, WorktreeCleanupData, cleanup_worktrees_direct},
-    share::ShareError,
     planning,
+    share::ShareError,
 };
 use sqlx::Error as SqlxError;
 use ts_rs::TS;
-use utils::response::ApiResponse;
+use utils::{approvals::ApprovalStatus as ApprovalStatusUtil, response::ApiResponse};
 use uuid::Uuid;
 
 use crate::{DeploymentImpl, error::ApiError, middleware::load_task_middleware};
@@ -172,9 +173,11 @@ pub async fn create_task_and_start(
         )
         .await;
     let attempt_id = Uuid::new_v4();
-    let git_branch_name = if planning::is_planning_task(&task) {
+    let git_branch_name = if planning::is_planning_conversation_task(&task) {
+        // Only Planning Conversation tasks use base branch directly (no new branch)
         payload.base_branch.clone()
     } else {
+        // All other tasks (including Plan status) create their own git branch
         deployment
             .container()
             .git_branch_from_task_attempt(&attempt_id, &task.title)
@@ -406,21 +409,27 @@ pub async fn approve_plan(
 
     // Check if process is still running (plan mode should be active)
     if latest_process.status != ExecutionProcessStatus::Running {
-        return Err(ApiError::BadRequest("No running execution process for plan approval".to_string()));
+        return Err(ApiError::BadRequest(
+            "No running execution process for plan approval".to_string(),
+        ));
     }
 
     // Find pending ExitPlanMode approval
     let approvals = deployment.approvals();
     let (approval_id, plan) = approvals
         .find_pending_exit_plan_mode(latest_process.id)
-        .ok_or_else(|| ApiError::BadRequest("No pending ExitPlanMode approval found".to_string()))?;
+        .ok_or_else(|| {
+            ApiError::BadRequest("No pending ExitPlanMode approval found".to_string())
+        })?;
 
     // Respond to the approval (approve it)
     let req = utils::approvals::ApprovalResponse {
         execution_process_id: latest_process.id,
         status: ApprovalStatusUtil::Approved,
     };
-    let _ = approvals.respond(pool, &approval_id, req).await
+    let _ = approvals
+        .respond(pool, &approval_id, req)
+        .await
         .map_err(|e| ApiError::BadRequest(format!("Failed to approve: {:?}", e)))?;
 
     // Save the plan to the task
@@ -437,19 +446,26 @@ pub async fn approve_plan(
     let ctx = ExecutionProcess::load_context(pool, latest_process.id).await?;
 
     // Get executor profile from the current action
-    let action = ctx.execution_process.executor_action()
+    let action = ctx
+        .execution_process
+        .executor_action()
         .map_err(|e| ApiError::BadRequest(format!("Failed to get executor action: {:?}", e)))?;
     let executor_profile_id = match action.typ() {
         ExecutorActionType::CodingAgentInitialRequest(req) => req.executor_profile_id.clone(),
         ExecutorActionType::CodingAgentFollowUpRequest(req) => req.executor_profile_id.clone(),
-        _ => return Err(ApiError::BadRequest("Not a coding agent action".to_string())),
+        _ => {
+            return Err(ApiError::BadRequest(
+                "Not a coding agent action".to_string(),
+            ));
+        }
     };
 
     // Get session ID for follow-up
     let session = ExecutorSession::find_by_execution_process_id(pool, latest_process.id)
         .await?
         .ok_or_else(|| ApiError::BadRequest("No executor session found".to_string()))?;
-    let session_id = session.session_id
+    let session_id = session
+        .session_id
         .ok_or_else(|| ApiError::BadRequest("No session ID in executor session".to_string()))?;
 
     // Create follow-up request with the plan as prompt
@@ -465,14 +481,20 @@ pub async fn approve_plan(
     );
 
     // Start the implementation execution
-    deployment.container().start_execution(
-        &ctx.task_attempt,
-        &new_action,
-        &ExecutionProcessRunReason::CodingAgent,
-    ).await
+    deployment
+        .container()
+        .start_execution(
+            &ctx.task_attempt,
+            &new_action,
+            &ExecutionProcessRunReason::CodingAgent,
+        )
+        .await
         .map_err(|e| ApiError::BadRequest(format!("Failed to start execution: {:?}", e)))?;
 
-    tracing::info!("Auto-approved plan and started implementation for task {}", task.id);
+    tracing::info!(
+        "Auto-approved plan and started implementation for task {}",
+        task.id
+    );
     Ok(ResponseJson(ApiResponse::success(())))
 }
 

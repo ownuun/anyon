@@ -133,6 +133,8 @@ function DiffsPanelContainer({
   );
 }
 
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+
 export function ProjectTasks() {
   const { t } = useTranslation(['tasks', 'common']);
   const { taskId, attemptId } = useParams<{
@@ -149,6 +151,7 @@ export function ProjectTasks() {
   const [selectedSharedTaskId, setSelectedSharedTaskId] = useState<
     string | null
   >(null);
+  const [showPlanDocs, setShowPlanDocs] = useState(false);
   const { userId } = useAuth();
 
   const {
@@ -370,7 +373,9 @@ export function ProjectTasks() {
     };
 
     tasks.forEach((task) => {
-      if (isPlanningTask({ title: task.title, description: task.description })) {
+      if (
+        isPlanningTask({ title: task.title, description: task.description })
+      ) {
         return;
       }
 
@@ -777,7 +782,7 @@ export function ProjectTasks() {
               base_branch: baseBranch,
             });
 
-            // Navigate to the attempt
+            // Plan 모드 시도 생성 후 바로 시도로 이동
             if (projectId) {
               navigate(paths.attempt(projectId, draggedTaskId, attempt.id));
             }
@@ -859,7 +864,9 @@ export function ProjectTasks() {
   const kanbanHeader = (
     <div className="flex justify-between items-center p-8 pb-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('header.title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t('header.title')}
+        </h1>
         <p className="text-muted-foreground">{t('header.description')}</p>
       </div>
       <Button onClick={handleCreateNewTask}>
@@ -935,6 +942,8 @@ export function ProjectTasks() {
             task={selectedTask}
             sharedTask={getSharedTask(selectedTask)}
             attempt={attempt ?? null}
+            showPlanDocs={showPlanDocs}
+            onTogglePlanDocs={() => setShowPlanDocs(!showPlanDocs)}
             onClose={() =>
               navigate(`/projects/${projectId}/tasks`, { replace: true })
             }
@@ -1009,10 +1018,51 @@ export function ProjectTasks() {
     </NewCardHeader>
   ) : null;
 
+  const isPlanTask = selectedTask?.status === 'plan';
+  const showSplitView = isPlanTask && showPlanDocs;
+
   const attemptContent = selectedTask ? (
     <NewCard className="h-full min-h-0 flex flex-col bg-diagonal-lines bg-muted border-0">
       {isTaskView ? (
         <TaskPanel task={selectedTask} />
+      ) : showSplitView ? (
+        <PanelGroup direction="horizontal" className="h-full">
+          <Panel defaultSize={60} minSize={30}>
+            <div className="h-full overflow-hidden">
+              <TaskAttemptPanel attempt={attempt} task={selectedTask}>
+                {({ logs, followUp }) => (
+                  <>
+                    <GitErrorBanner />
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      <div className="flex-1 min-h-0 flex flex-col">{logs}</div>
+
+                      <div className="shrink-0 border-t">
+                        <div className="mx-auto w-full max-w-[50rem]">
+                          <TodoPanel />
+                        </div>
+                      </div>
+
+                      <div className="min-h-0 max-h-[50%] border-t overflow-hidden">
+                        <div className="mx-auto w-full max-w-[50rem] h-full min-h-0">
+                          {followUp}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </TaskAttemptPanel>
+            </div>
+          </Panel>
+          <PanelResizeHandle className="w-1 bg-border hover:bg-accent transition-colors" />
+          <Panel defaultSize={40} minSize={20}>
+            <div className="h-full p-6 bg-background overflow-auto">
+              <h3 className="text-lg font-semibold mb-4">계획 문서</h3>
+              <p className="text-muted-foreground">
+                계획 문서 내용이 여기에 표시됩니다.
+              </p>
+            </div>
+          </Panel>
+        </PanelGroup>
       ) : (
         <TaskAttemptPanel attempt={attempt} task={selectedTask}>
           {({ logs, followUp }) => (

@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { X, Save, Trash2, Check, Edit2 } from 'lucide-react';
+import { X, Trash2, Check, Edit2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Document } from '@/types/document';
+import type { DocumentSaveStatus } from '@/hooks/useDocumentAutosave';
 
 interface DocumentCanvasHeaderProps {
   document: Document;
   onClose: () => void;
-  onSave: () => void | Promise<void>;
   onDelete: () => void | Promise<void>;
   onTitleChange: (title: string) => void | Promise<void>;
+  saveStatus?: DocumentSaveStatus;
   isSaving?: boolean;
   disableTitleEdit?: boolean;
   disableDelete?: boolean;
@@ -18,9 +19,9 @@ interface DocumentCanvasHeaderProps {
 export function DocumentCanvasHeader({
   document,
   onClose,
-  onSave,
   onDelete,
   onTitleChange,
+  saveStatus = 'idle',
   isSaving = false,
   disableTitleEdit = false,
   disableDelete = false,
@@ -81,26 +82,29 @@ export function DocumentCanvasHeader({
           </div>
         )}
 
-        {/* Saving indicator */}
-        {isSaving && (
-          <span className="text-xs text-muted-foreground animate-pulse">
+        {/* Auto-save status indicator */}
+        {saveStatus === 'saving' && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" />
             Saving...
+          </span>
+        )}
+        {saveStatus === 'saved' && (
+          <span className="flex items-center gap-1.5 text-xs text-green-600">
+            <CheckCircle2 className="h-3 w-3" />
+            Saved
+          </span>
+        )}
+        {saveStatus === 'error' && (
+          <span className="flex items-center gap-1.5 text-xs text-destructive">
+            <AlertCircle className="h-3 w-3" />
+            Error saving
           </span>
         )}
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onSave}
-          disabled={isSaving}
-          className="gap-2"
-        >
-          <Save className="h-4 w-4" />
-          <span>Save</span>
-        </Button>
 
         {!disableDelete && (
           <Button

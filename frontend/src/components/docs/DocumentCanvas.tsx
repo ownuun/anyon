@@ -2,6 +2,7 @@ import { useDocumentContext } from '@/contexts/DocumentContext';
 import { DocumentCanvasHeader } from './DocumentCanvasHeader';
 import { DocumentEditor } from './DocumentEditor';
 import { useCallback, useState, useEffect } from 'react';
+import { useDocumentAutosave } from '@/hooks/useDocumentAutosave';
 
 interface DocumentCanvasProps {
   disableTitleEdit?: boolean;
@@ -12,7 +13,7 @@ export function DocumentCanvas({
   disableDelete = false,
   disableTitleEdit = false,
 }: DocumentCanvasProps) {
-  const { openDocument, closeDoc, updateDoc, deleteDoc, isSaving } =
+  const { openDocument, closeDoc, updateDoc, deleteDoc } =
     useDocumentContext();
 
   // Local content state for immediate updates
@@ -25,11 +26,14 @@ export function DocumentCanvas({
     }
   }, [openDocument?.id]); // Only sync when document ID changes
 
-  const handleSave = useCallback(async () => {
-    if (openDocument) {
-      await updateDoc(openDocument.id, localContent);
-    }
-  }, [openDocument, localContent, updateDoc]);
+  // Auto-save with debounce
+  const { saveStatus, isSaving } = useDocumentAutosave({
+    docId: openDocument?.id,
+    content: localContent,
+    onSave: updateDoc,
+    debounceMs: 1500,
+    enabled: !!openDocument,
+  });
 
   const handleDelete = useCallback(async () => {
     if (openDocument) {
@@ -64,9 +68,9 @@ export function DocumentCanvas({
       <DocumentCanvasHeader
         document={openDocument}
         onClose={closeDoc}
-        onSave={handleSave}
         onDelete={handleDelete}
         onTitleChange={handleTitleChange}
+        saveStatus={saveStatus}
         isSaving={isSaving}
         disableDelete={disableDelete}
         disableTitleEdit={disableTitleEdit}

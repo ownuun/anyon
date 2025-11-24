@@ -81,9 +81,7 @@ pub struct AgentBundleService {
 
 impl AgentBundleService {
     pub fn new(settings: AgentBundleSettings) -> Self {
-        Self {
-            settings,
-        }
+        Self { settings }
     }
 
     pub async fn import_into_project(
@@ -100,7 +98,9 @@ impl AgentBundleService {
             .arg("anyon-agent")
             .current_dir(project_root)
             .output()
-            .map_err(|e| AgentBundleError::Download(format!("Failed to run npx anyon-agent: {}", e)))?;
+            .map_err(|e| {
+                AgentBundleError::Download(format!("Failed to run npx anyon-agent: {}", e))
+            })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -123,10 +123,7 @@ impl AgentBundleService {
 
         Ok(result)
     }
-
 }
-
-
 
 fn copy_dir_filtered(
     src: &Path,

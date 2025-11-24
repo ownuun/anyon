@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Eye, FileDiff, X } from 'lucide-react';
+import { Eye, FileDiff, X, FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import {
@@ -22,6 +22,8 @@ interface AttemptHeaderActionsProps {
   task: TaskWithAttemptStatus;
   attempt?: TaskAttempt | null;
   sharedTask?: SharedTaskRecord;
+  showPlanDocs?: boolean;
+  onTogglePlanDocs?: () => void;
 }
 
 export const AttemptHeaderActions = ({
@@ -31,10 +33,13 @@ export const AttemptHeaderActions = ({
   task,
   attempt,
   sharedTask,
+  showPlanDocs,
+  onTogglePlanDocs,
 }: AttemptHeaderActionsProps) => {
   const { t } = useTranslation('tasks');
   const posthog = usePostHog();
   const isXL = useMediaQuery('(min-width: 1280px)');
+  const isPlanTask = task.status === 'plan';
 
   return (
     <>
@@ -106,7 +111,26 @@ export const AttemptHeaderActions = ({
           </ToggleGroup>
         </TooltipProvider>
       )}
-      {typeof mode !== 'undefined' && onModeChange && isXL && (
+      {isPlanTask && onTogglePlanDocs && isXL && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={showPlanDocs ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={onTogglePlanDocs}
+                aria-label="Toggle plan docs"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {t('attemptHeaderActions.planDocs')}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      {((typeof mode !== 'undefined' && onModeChange && isXL) || (isPlanTask && onTogglePlanDocs && isXL)) && (
         <div className="h-4 w-px bg-border" />
       )}
       <ActionsDropdown task={task} attempt={attempt} sharedTask={sharedTask} />

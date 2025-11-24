@@ -532,11 +532,26 @@ pub trait ContainerService {
                 .as_ref()
                 .ok_or_else(|| ContainerError::Other(anyhow!("Container ref not found")))?,
         );
-        let mut prompt =
-            ImageService::canonicalise_image_paths(&task.to_prompt(), &worktree_path);
-        if planning::is_planning_task(&task) {
-            // Avoid sending the planning task's title/description as the initial prompt
+        let mut prompt = ImageService::canonicalise_image_paths(&task.to_prompt(), &worktree_path);
+
+        if planning::is_planning_conversation_task(&task) {
+            // Planning Conversation은 초기 프롬프트를 비움
             prompt = String::new();
+        } else if task.status == TaskStatus::Plan {
+            // Plan 칸반으로 이동한 경우: 워크플로우 커맨드를 바로 초기 프롬프트로 사용
+            let mut base_prompt = format!(
+                "/anyon:custom:workflows:story-implementation-plan {}",
+                task.title
+            );
+
+            if let Some(desc) = &task.description {
+                let trimmed = desc.trim();
+                if !trimmed.is_empty() {
+                    base_prompt = format!("{base_prompt}\n\n{trimmed}");
+                }
+            }
+
+            prompt = ImageService::canonicalise_image_paths(&base_prompt, &worktree_path);
         }
 
         let cleanup_action = self.cleanup_action(project.cleanup_script);

@@ -30,16 +30,45 @@ fn environment() -> &'static str {
     }
 }
 
+fn sentry_enabled() -> bool {
+    // 기본: 로컬(dev)에서는 끔. ENABLE_SENTRY_IN_DEV 있으면 켬. DISABLE_SENTRY 있으면 무조건 끔.
+    if std::env::var("DISABLE_SENTRY").is_ok() {
+        return false;
+    }
+    if cfg!(debug_assertions) && std::env::var("ENABLE_SENTRY_IN_DEV").is_err() {
+        return false;
+    }
+    true
+}
+
+fn sentry_dsn() -> Option<String> {
+    if let Ok(dsn) = std::env::var("SENTRY_DSN") {
+        if !dsn.is_empty() {
+            return Some(dsn);
+        }
+    }
+    if sentry_enabled() {
+        Some(SENTRY_DSN.to_string())
+    } else {
+        None
+    }
+}
+
 pub fn init_once(source: SentrySource) {
+    let Some(dsn) = sentry_dsn() else {
+        return;
+    };
+
     INIT_GUARD.get_or_init(|| {
-        sentry::init((
-            SENTRY_DSN,
-            sentry::ClientOptions {
-                release: sentry::release_name!(),
-                environment: Some(environment().into()),
-                ..Default::default()
-            },
-        ))
+        sentry::init(sentry::ClientOptions {
+            dsn: Some(
+                dsn.parse()
+                    .expect("SENTRY_DSN must be a valid DSN or unset to disable sentry"),
+            ),
+            release: sentry::release_name!(),
+            environment: Some(environment().into()),
+            ..Default::default()
+        })
     });
 
     sentry::configure_scope(|scope| {

@@ -1,3 +1,9 @@
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+    path::PathBuf,
+};
+
 use axum::{
     Extension, Json, Router,
     extract::{Path, Query, State},
@@ -9,10 +15,7 @@ use chrono::{DateTime, Utc};
 use db::models::project::Project;
 use deployment::Deployment;
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use std::path::PathBuf;
-use tokio::fs;
+use tokio::{fs, fs::OpenOptions};
 use ts_rs::TS;
 use utils::response::ApiResponse;
 use uuid::Uuid;
@@ -81,11 +84,35 @@ async fn ensure_category_folder(project: &Project, category: &str) -> Result<Pat
     Ok(path)
 }
 
+// Writeability check: ensure directory exists and is writable by doing a probe write.
+async fn ensure_writable_dir(path: &PathBuf) -> Result<(), ApiError> {
+    fs::create_dir_all(path).await?;
+    let probe = path.join(".write-test.tmp");
+    match OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(&probe)
+        .await
+    {
+        Ok(_) => {
+            let _ = fs::remove_file(&probe).await;
+            Ok(())
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => {
+            Err(ApiError::Forbidden(format!(
+                "문서 저장 경로에 쓸 수 없습니다: {}",
+                path.to_string_lossy()
+            )))
+        }
+        Err(e) => Err(ApiError::Io(e)),
+    }
+}
+
 // Ensure fixed conversation docs exist (empty templates)
 async fn ensure_conversation_docs(project: &Project) -> Result<(), ApiError> {
     let folder = category_to_folder("conversation");
     let path = get_docs_path(project).join(folder);
-    fs::create_dir_all(&path).await?;
+    ensure_writable_dir(&path).await?;
 
     const FILES: &[&str] = &[
         "prd.md",
@@ -162,12 +189,6 @@ pub struct DocumentQueryParams {
     pub category: Option<String>,
 }
 
-#[derive(Deserialize)]
-pub struct DocumentPathParams {
-    pub project_id: Uuid,
-    pub document_id: String,
-}
-
 // Read document from file
 async fn read_document_from_file(
     project: &Project,
@@ -182,10 +203,12 @@ async fn read_document_from_file(
     let title = filename.strip_suffix(".md").unwrap_or(filename).to_string();
     let category = folder_to_category(category_folder);
 
-    let created_at = metadata.created()
+    let created_at = metadata
+        .created()
         .map(|t| DateTime::<Utc>::from(t))
         .unwrap_or_else(|_| Utc::now());
-    let updated_at = metadata.modified()
+    let updated_at = metadata
+        .modified()
         .map(|t| DateTime::<Utc>::from(t))
         .unwrap_or_else(|_| Utc::now());
 
@@ -253,7 +276,7 @@ pub async fn list_documents(
 
 pub async fn get_document(
     Extension(project): Extension<Project>,
-    Path(params): Path<DocumentPathParams>,
+    Path((_project_id, document_id)): Path<(String, String)>,
 ) -> Result<ResponseJson<ApiResponse<Document>>, ApiError> {
     // Ensure conversation docs are present before search (covers direct get by ID)
     ensure_conversation_docs(&project).await?;
@@ -277,9 +300,10 @@ pub async fn get_document(
             let path = entry.path();
             if path.extension().map_or(false, |ext| ext == "md") {
                 let file_id = path_to_uuid(&path);
-                if file_id.to_string() == params.document_id {
+                if file_id.to_string() == document_id {
                     if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-                        let doc = read_document_from_file(&project, category_folder, filename).await?;
+                        let doc =
+                            read_document_from_file(&project, category_folder, filename).await?;
                         return Ok(ResponseJson(ApiResponse::success(doc)));
                     }
                 }
@@ -296,19 +320,23 @@ pub async fn create_document(
     Json(payload): Json<CreateDocument>,
 ) -> Result<ResponseJson<ApiResponse<Document>>, ApiError> {
     let category_path = ensure_category_folder(&project, &payload.category).await?;
+    ensure_writable_dir(&category_path).await?;
     let filename = format!("{}.md", sanitize_filename(&payload.title));
     let file_path = category_path.join(&filename);
 
     // Check if file already exists
     if file_path.exists() {
-        return Err(ApiError::BadRequest("Document with this title already exists".to_string()));
+        return Err(ApiError::BadRequest(
+            "Document with this title already exists".to_string(),
+        ));
     }
 
     fs::write(&file_path, &payload.content).await?;
     let metadata = fs::metadata(&file_path).await?;
 
     let now = Utc::now();
-    let created_at = metadata.created()
+    let created_at = metadata
+        .created()
         .map(|t| DateTime::<Utc>::from(t))
         .unwrap_or(now);
 
@@ -339,7 +367,7 @@ pub async fn create_document(
 pub async fn update_document(
     Extension(project): Extension<Project>,
     State(deployment): State<DeploymentImpl>,
-    Path(params): Path<DocumentPathParams>,
+    Path((_project_id, document_id)): Path<(String, String)>,
     Json(payload): Json<UpdateDocument>,
 ) -> Result<ResponseJson<ApiResponse<Document>>, ApiError> {
     // Ensure conversation docs directory exists (for moves or new category)
@@ -364,19 +392,27 @@ pub async fn update_document(
             let path = entry.path();
             if path.extension().map_or(false, |ext| ext == "md") {
                 let file_id = path_to_uuid(&path);
-                if file_id.to_string() == params.document_id {
+                if file_id.to_string() == document_id {
                     // Found the document
-                    let old_filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string();
+                    let old_filename = path
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("")
+                        .to_string();
                     let old_title = old_filename.strip_suffix(".md").unwrap_or(&old_filename);
 
                     let current_content = fs::read_to_string(&path).await?;
 
                     let new_title = payload.title.as_deref().unwrap_or(old_title);
                     let new_content = payload.content.as_deref().unwrap_or(&current_content);
-                    let new_category = payload.category.as_deref().unwrap_or(folder_to_category(category_folder));
+                    let new_category = payload
+                        .category
+                        .as_deref()
+                        .unwrap_or(folder_to_category(category_folder));
 
                     let new_filename = format!("{}.md", sanitize_filename(new_title));
                     let new_category_path = ensure_category_folder(&project, new_category).await?;
+                    ensure_writable_dir(&new_category_path).await?;
                     let new_path = new_category_path.join(&new_filename);
 
                     // Write content to new path
@@ -389,10 +425,12 @@ pub async fn update_document(
 
                     let metadata = fs::metadata(&new_path).await?;
 
-                    let created_at = metadata.created()
+                    let created_at = metadata
+                        .created()
                         .map(|t| DateTime::<Utc>::from(t))
                         .unwrap_or_else(|_| Utc::now());
-                    let updated_at = metadata.modified()
+                    let updated_at = metadata
+                        .modified()
                         .map(|t| DateTime::<Utc>::from(t))
                         .unwrap_or_else(|_| Utc::now());
 
@@ -426,7 +464,7 @@ pub async fn update_document(
 
 pub async fn delete_document(
     Extension(project): Extension<Project>,
-    Path(params): Path<DocumentPathParams>,
+    Path((_project_id, document_id)): Path<(String, String)>,
 ) -> Result<ResponseJson<ApiResponse<()>>, ApiError> {
     // Ensure conversation docs directory exists for consistency
     ensure_conversation_docs(&project).await?;
@@ -449,7 +487,8 @@ pub async fn delete_document(
             let path = entry.path();
             if path.extension().map_or(false, |ext| ext == "md") {
                 let file_id = path_to_uuid(&path);
-                if file_id.to_string() == params.document_id {
+                if file_id.to_string() == document_id {
+                    ensure_writable_dir(&category_path).await?;
                     fs::remove_file(&path).await?;
                     return Ok(ResponseJson(ApiResponse::success(())));
                 }
@@ -464,8 +503,16 @@ pub fn router(deployment: &DeploymentImpl) -> Router<DeploymentImpl> {
     // Routes nested under project
     let project_documents_router = Router::new()
         .route("/", get(list_documents).post(create_document))
-        .route("/{document_id}", get(get_document).put(update_document).delete(delete_document))
-        .layer(from_fn_with_state(deployment.clone(), load_project_middleware));
+        .route(
+            "/{document_id}",
+            get(get_document)
+                .put(update_document)
+                .delete(delete_document),
+        )
+        .layer(from_fn_with_state(
+            deployment.clone(),
+            load_project_middleware,
+        ));
 
     Router::new().nest("/projects/{project_id}/documents", project_documents_router)
 }
