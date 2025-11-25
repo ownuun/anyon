@@ -55,8 +55,10 @@ jobs:
       - name: Install Windows OpenSSL
         if: matrix.platform == 'windows-latest'
         run: |
-          choco install openssl -y
-          echo "OPENSSL_DIR=C:/Program Files/OpenSSL-Win64" >> $GITHUB_ENV
+          choco install openssl --version=3.3.2 -y
+          echo "OPENSSL_DIR=C:\Program Files\OpenSSL" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL\lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL\include" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -68,6 +70,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           OPENSSL_NO_VENDOR: 1
+          TARGET: ${{ matrix.target }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Anyon Desktop v__VERSION__'
