@@ -10,12 +10,14 @@ const NewCard = React.forwardRef<
 ));
 NewCard.displayName = 'NewCard';
 
-interface NewCardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+interface NewCardHeaderProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
+  title?: React.ReactNode;
   actions?: React.ReactNode;
 }
 
 const NewCardHeader = React.forwardRef<HTMLDivElement, NewCardHeaderProps>(
-  ({ className, actions, children, ...props }, ref) => (
+  ({ className, title, actions, children, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
@@ -30,11 +32,11 @@ const NewCardHeader = React.forwardRef<HTMLDivElement, NewCardHeaderProps>(
     >
       {actions ? (
         <>
-          <div className="min-w-0 flex-1 py-3">{children}</div>
+          <div className="min-w-0 flex-1 py-3">{title || children}</div>
           <div className="flex items-center gap-4">{actions}</div>
         </>
       ) : (
-        children
+        title || children
       )}
     </div>
   )

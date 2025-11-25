@@ -110,7 +110,7 @@ export const checkForUpdates = async (): Promise<UpdateInfo | null> => {
   try {
     const update = await updater.check();
 
-    if (update) {
+    if (update && update.available) {
       return {
         available: true,
         currentVersion: update.currentVersion,
@@ -120,6 +120,7 @@ export const checkForUpdates = async (): Promise<UpdateInfo | null> => {
       };
     }
 
+    // No update available
     return {
       available: false,
       currentVersion: update?.currentVersion || 'unknown',
@@ -148,7 +149,7 @@ export const installUpdate = async (
   try {
     const update = await updater.check();
 
-    if (!update) {
+    if (!update || !update.available) {
       console.log('No update available');
       return false;
     }

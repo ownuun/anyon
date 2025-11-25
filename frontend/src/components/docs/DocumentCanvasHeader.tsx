@@ -22,7 +22,6 @@ export function DocumentCanvasHeader({
   onDelete,
   onTitleChange,
   saveStatus = 'idle',
-  isSaving = false,
   disableTitleEdit = false,
   disableDelete = false,
 }: DocumentCanvasHeaderProps) {

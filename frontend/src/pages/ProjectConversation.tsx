@@ -176,12 +176,13 @@ function usePlanningSession(
     latestAttempt,
   ]);
 
-  const isLoading =
+  const isLoading = Boolean(
     activated &&
-    (tasksLoading ||
-      branchesLoading ||
-      creating ||
-      (!latestAttempt && attemptsLoading));
+      (tasksLoading ||
+        branchesLoading ||
+        creating ||
+        (!latestAttempt && attemptsLoading))
+  );
 
   const error = activated
     ? (tasksError ??
