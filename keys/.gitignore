@@ -1,0 +1,8 @@
+# Ignore private keys
+*.key
+
+# Keep public keys
+!*.pub
+
+# Keep this gitignore
+!.gitignore

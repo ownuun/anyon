@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Anyon",
+  "version": "0.1.0",
+  "identifier": "ai.anyon.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm run sidecar:build && pnpm run frontend:dev",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "pnpm run sidecar:build:release && pnpm run frontend:build",
+    "frontendDist": "../frontend/dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Anyon",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:* https://api.github.com https://github.com; img-src 'self' data: https:; font-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "shortDescription": "AI Coding Agent Task Manager",
+    "longDescription": "Anyon is a desktop application for managing AI coding agent tasks with GitHub integration.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "targets": "all",
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "providerShortName": null,
+      "entitlements": null
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "depends": []
+      }
+    },
+    "externalBin": [
+      "binaries/anyon-core"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "dialog": true,
+      "endpoints": [
+        "https://github.com/ownuun/anyon-mvp/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZGMjA5NTVEMDM2QTI1NTUKUldSVkpXb0RYWlVnYnhuY1kyVG9GWWRWRGNoZExFdTRlWjl2bjBPVkJRQWJ3bkt1ODJ1VWtNMHoK",
+      "windows": {
+        "installMode": "passive"
+      }
+    },
+    "shell": {
+      "sidecar": true,
+      "open": true
+    }
+  }
+}

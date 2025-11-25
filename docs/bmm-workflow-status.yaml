@@ -1,0 +1,84 @@
+# BMM Workflow Status - Anyon Desktop Distribution
+# Generated: 2025-11-25
+# Track: BMad Method (Brownfield)
+
+generated: "2025-11-25"
+project: "Anyon Desktop Distribution"
+project_type: "desktop-app"
+selected_track: "bmad-method"
+field_type: "brownfield"
+workflow_path: "method-brownfield"
+
+workflow_status:
+  # Prerequisites
+  prerequisite:
+    document-project:
+      status: "recommended"
+      agent: "analyst"
+      command: "document-project"
+      note: "기존 코드베이스 문서화 - 이미 CLAUDE.md에 일부 문서화됨"
+
+  # Phase 0: Discovery (Optional)
+  phase-0-discovery:
+    brainstorm-project:
+      status: "skipped"
+      agent: "analyst"
+    research:
+      status: "skipped"
+      agent: "analyst"
+    product-brief:
+      status: "docs/product-brief.md"
+      agent: "analyst"
+      note: "완료됨"
+
+  # Phase 1: Planning
+  phase-1-planning:
+    prd:
+      status: "docs/prd.md"
+      agent: "pm"
+      command: "prd"
+      note: "완료됨 - 26 FRs, 16 NFRs"
+    validate-prd:
+      status: "optional"
+      agent: "pm"
+      command: "validate-prd"
+    create-design:
+      status: "conditional"
+      condition: "if_has_ui"
+      agent: "ux-designer"
+      command: "create-design"
+      note: "UI 변경 있으면 필요"
+
+  # Phase 2: Solutioning
+  phase-2-solutioning:
+    create-architecture:
+      status: "docs/architecture.md"
+      agent: "architect"
+      command: "create-architecture"
+      note: "완료됨 - Tauri + Sidecar 패턴"
+    create-epics-and-stories:
+      status: "docs/epics.md"
+      agent: "pm"
+      command: "create-epics-and-stories"
+      note: "완료됨 - 8 Epics, 37 Stories"
+    test-design:
+      status: "recommended"
+      agent: "tea"
+      command: "test-design"
+    validate-architecture:
+      status: "optional"
+      agent: "architect"
+      command: "validate-architecture"
+    implementation-readiness:
+      status: "docs/implementation-readiness.md"
+      agent: "architect"
+      command: "implementation-readiness"
+      note: "완료됨 - READY FOR IMPLEMENTATION"
+
+  # Phase 3: Implementation
+  phase-3-implementation:
+    sprint-planning:
+      status: "docs/sprint-plan.md"
+      agent: "sm"
+      command: "sprint-planning"
+      note: "완료됨 - 5 Sprints, 37 Stories"

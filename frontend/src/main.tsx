@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/react';
 import i18n from './i18n';
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
+import { initApiBaseUrl } from './lib/api';
 // Import modal type definitions
 import './types/modals';
 
@@ -62,21 +63,28 @@ const queryClient = new QueryClient({
   },
 });
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <PostHogProvider client={posthog}>
-        <Sentry.ErrorBoundary
-          fallback={<p>{i18n.t('common:states.error')}</p>}
-          showDialog
-        >
-          <ClickToComponent />
-          <AnyonWebCompanion />
-          <App />
-          {/*<TanStackDevtools plugins={[FormDevtoolsPlugin()]} />*/}
-          {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-        </Sentry.ErrorBoundary>
-      </PostHogProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+// Initialize API base URL for Tauri mode before rendering
+const init = async () => {
+  await initApiBaseUrl();
+
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <PostHogProvider client={posthog}>
+          <Sentry.ErrorBoundary
+            fallback={<p>{i18n.t('common:states.error')}</p>}
+            showDialog
+          >
+            <ClickToComponent />
+            <AnyonWebCompanion />
+            <App />
+            {/*<TanStackDevtools plugins={[FormDevtoolsPlugin()]} />*/}
+            {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+          </Sentry.ErrorBoundary>
+        </PostHogProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
+
+init();

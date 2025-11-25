@@ -1,4 +1,5 @@
 // Import all necessary types from shared types
+import { isTauri, getSidecarPort } from './tauri';
 
 import {
   ApprovalStatus,
@@ -96,13 +97,56 @@ class ApiError<E = unknown> extends Error {
   }
 }
 
+// API base URL for Tauri mode (set by initApiBaseUrl)
+let apiBaseUrl = '';
+
+/**
+ * Initialize the API base URL for Tauri mode.
+ * This should be called early in the app lifecycle.
+ * In browser mode (non-Tauri), this is a no-op.
+ */
+export const initApiBaseUrl = async (): Promise<void> => {
+  if (!isTauri()) {
+    apiBaseUrl = '';
+    return;
+  }
+
+  // Wait for sidecar to be ready with retries
+  const maxRetries = 30;
+  const retryDelay = 500;
+
+  for (let i = 0; i < maxRetries; i++) {
+    const port = await getSidecarPort();
+    if (port) {
+      apiBaseUrl = `http://localhost:${port}`;
+      console.log(`[Tauri] API base URL set to: ${apiBaseUrl}`);
+      return;
+    }
+    console.log(`[Tauri] Waiting for sidecar... (attempt ${i + 1}/${maxRetries})`);
+    await new Promise(resolve => setTimeout(resolve, retryDelay));
+  }
+
+  console.error('[Tauri] Failed to get sidecar port after max retries');
+};
+
+/**
+ * Get the full URL for an API endpoint.
+ * In Tauri mode, this prepends the sidecar base URL.
+ */
+const getFullUrl = (url: string): string => {
+  if (apiBaseUrl && url.startsWith('/')) {
+    return `${apiBaseUrl}${url}`;
+  }
+  return url;
+};
+
 export const makeRequest = async (url: string, options: RequestInit = {}) => {
   const headers = new Headers(options.headers ?? {});
   if (!headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  return fetch(url, {
+  return fetch(getFullUrl(url), {
     ...options,
     headers,
   });
@@ -846,7 +890,7 @@ export const imagesApi = {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch('/api/images/upload', {
+    const response = await fetch(getFullUrl('/api/images/upload'), {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -868,7 +912,7 @@ export const imagesApi = {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch(`/api/images/task/${taskId}/upload`, {
+    const response = await fetch(getFullUrl(`/api/images/task/${taskId}/upload`), {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -899,7 +943,7 @@ export const imagesApi = {
   },
 
   getImageUrl: (imageId: string): string => {
-    return `/api/images/${imageId}/file`;
+    return getFullUrl(`/api/images/${imageId}/file`);
   },
 };
 

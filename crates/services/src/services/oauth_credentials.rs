@@ -88,29 +88,39 @@ enum Backend {
     File(FileBackend),
     #[cfg(target_os = "macos")]
     Keychain(KeychainBackend),
+    Keyring(KeyringBackend),
 }
 
 impl Backend {
     fn detect(path: PathBuf) -> Self {
-        #[cfg(target_os = "macos")]
-        {
-            let use_file = match std::env::var("OAUTH_CREDENTIALS_BACKEND") {
-                Ok(v) if v.eq_ignore_ascii_case("file") => true,
-                Ok(v) if v.eq_ignore_ascii_case("keychain") => false,
-                _ => cfg!(debug_assertions),
-            };
-            if use_file {
-                tracing::info!("OAuth credentials backend: file");
+        let backend_choice = std::env::var("OAUTH_CREDENTIALS_BACKEND")
+            .ok()
+            .map(|v| v.to_lowercase());
+
+        match backend_choice.as_deref() {
+            Some("file") => {
+                tracing::info!("OAuth credentials backend: file (forced by env)");
                 Backend::File(FileBackend { path })
-            } else {
-                tracing::info!("OAuth credentials backend: keychain");
+            }
+            Some("keyring") => {
+                tracing::info!("OAuth credentials backend: keyring (forced by env)");
+                Backend::Keyring(KeyringBackend)
+            }
+            #[cfg(target_os = "macos")]
+            Some("keychain") => {
+                tracing::info!("OAuth credentials backend: macos keychain (forced by env)");
                 Backend::Keychain(KeychainBackend)
             }
-        }
-        #[cfg(not(target_os = "macos"))]
-        {
-            tracing::info!("OAuth credentials backend: file");
-            Backend::File(FileBackend { path })
+            _ => {
+                // Default behavior: use keyring in production, file in debug
+                if cfg!(debug_assertions) {
+                    tracing::info!("OAuth credentials backend: file (debug mode)");
+                    Backend::File(FileBackend { path })
+                } else {
+                    tracing::info!("OAuth credentials backend: keyring (production mode)");
+                    Backend::Keyring(KeyringBackend)
+                }
+            }
         }
     }
 }
@@ -121,6 +131,7 @@ impl StoreBackend for Backend {
             Backend::File(b) => b.load().await,
             #[cfg(target_os = "macos")]
             Backend::Keychain(b) => b.load().await,
+            Backend::Keyring(b) => b.load().await,
         }
     }
 
@@ -129,6 +140,7 @@ impl StoreBackend for Backend {
             Backend::File(b) => b.save(creds).await,
             #[cfg(target_os = "macos")]
             Backend::Keychain(b) => b.save(creds).await,
+            Backend::Keyring(b) => b.save(creds).await,
         }
     }
 
@@ -137,6 +149,7 @@ impl StoreBackend for Backend {
             Backend::File(b) => b.clear().await,
             #[cfg(target_os = "macos")]
             Backend::Keychain(b) => b.clear().await,
+            Backend::Keyring(b) => b.clear().await,
         }
     }
 }
@@ -240,6 +253,69 @@ impl KeychainBackend {
             Ok(()) => Ok(()),
             Err(e) if e.code() == Self::ERR_SEC_ITEM_NOT_FOUND => Ok(()),
             Err(e) => Err(std::io::Error::other(e)),
+        }
+    }
+}
+
+/// Cross-platform keyring backend using keyring-rs
+///
+/// This backend uses the OS-native credential storage:
+/// - macOS: Keychain
+/// - Windows: Credential Manager
+/// - Linux: Secret Service (libsecret)
+struct KeyringBackend;
+
+impl KeyringBackend {
+    const SERVICE_NAME: &'static str = "ai.anyon.desktop";
+    const ACCOUNT_NAME: &'static str = "oauth_credentials";
+
+    fn get_entry(&self) -> Result<keyring::Entry, std::io::Error> {
+        keyring::Entry::new(Self::SERVICE_NAME, Self::ACCOUNT_NAME)
+            .map_err(|e| std::io::Error::other(format!("Failed to create keyring entry: {}", e)))
+    }
+
+    async fn load(&self) -> std::io::Result<Option<StoredCredentials>> {
+        let entry = self.get_entry()?;
+
+        match entry.get_password() {
+            Ok(json) => match serde_json::from_str::<StoredCredentials>(&json) {
+                Ok(creds) => Ok(Some(creds)),
+                Err(error) => {
+                    tracing::warn!(
+                        ?error,
+                        "failed to parse keyring credentials; ignoring entry and requiring re-login"
+                    );
+                    Ok(None)
+                }
+            },
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(e) => Err(std::io::Error::other(format!(
+                "Failed to load from keyring: {}",
+                e
+            ))),
+        }
+    }
+
+    async fn save(&self, creds: &StoredCredentials) -> std::io::Result<()> {
+        let entry = self.get_entry()?;
+        let json =
+            serde_json::to_string_pretty(creds).map_err(|e| std::io::Error::other(e.to_string()))?;
+
+        entry
+            .set_password(&json)
+            .map_err(|e| std::io::Error::other(format!("Failed to save to keyring: {}", e)))
+    }
+
+    async fn clear(&self) -> std::io::Result<()> {
+        let entry = self.get_entry()?;
+
+        match entry.delete_credential() {
+            Ok(()) => Ok(()),
+            Err(keyring::Error::NoEntry) => Ok(()),
+            Err(e) => Err(std::io::Error::other(format!(
+                "Failed to delete from keyring: {}",
+                e
+            ))),
         }
     }
 }

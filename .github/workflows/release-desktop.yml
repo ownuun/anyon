@@ -1,0 +1,101 @@
+name: Release Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on version tags like v0.1.0, v1.0.0, etc.
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            target: 'x86_64-unknown-linux-gnu'
+          - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Anyon Desktop v__VERSION__'
+          releaseBody: |
+            ## What's Changed
+
+            See the full changelog at [CHANGELOG.md](https://github.com/ownuun/anyon-mvp/blob/main/CHANGELOG.md)
+
+            ## Installation
+
+            ### macOS
+            - Download the `.dmg` file for your architecture (Apple Silicon or Intel)
+            - Open the DMG and drag Anyon to Applications
+            - On first launch, you may need to allow the app in System Preferences > Security & Privacy
+
+            ### Windows
+            - Download the `.msi` or `.exe` installer
+            - Run the installer and follow the prompts
+            - The app will auto-update on future releases
+
+            ### Linux
+            - Download the `.AppImage` file
+            - Make it executable: `chmod +x Anyon_*.AppImage`
+            - Run it: `./Anyon_*.AppImage`
+            - Or download the `.deb` package for Debian/Ubuntu
+
+            ## Security
+
+            All releases are signed and verified. The app will only install updates signed with our release key.
+
+            ---
+
+            🤖 Generated with [Claude Code](https://claude.com/claude-code)
+          releaseDraft: true
+          prerelease: false
+          args: --target ${{ matrix.target }}
