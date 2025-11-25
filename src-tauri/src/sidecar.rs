@@ -1,5 +1,5 @@
 use std::sync::Mutex;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::{process::CommandChild, ShellExt};
 
 /// State for managing the sidecar process
@@ -50,7 +50,7 @@ pub async fn start_sidecar(app: &AppHandle) -> Result<u16, String> {
 
 /// Parse the port number from sidecar stdout
 async fn parse_port_from_output(
-    rx: &mut tauri_plugin_shell::process::CommandEvents,
+    rx: &mut tokio::sync::mpsc::Receiver<tauri_plugin_shell::process::CommandEvent>,
 ) -> Result<u16, String> {
     use tauri_plugin_shell::process::CommandEvent;
 

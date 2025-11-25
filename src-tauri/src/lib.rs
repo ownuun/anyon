@@ -31,7 +31,7 @@ pub fn run() {
             let keychain = app.state::<keychain::KeychainService>();
 
             // Initialize system tray
-            if let Err(e) = tray::init(app) {
+            if let Err(e) = tray::init(&handle) {
                 tracing::error!("Failed to initialize system tray: {}", e);
             }
 
