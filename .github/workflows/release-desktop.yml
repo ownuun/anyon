@@ -64,9 +64,17 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: |
           # Install ImageMagick for icon conversion
-          choco install imagemagick -y
+          choco install imagemagick -y --force
+          # Refresh environment to get magick in PATH
+          refreshenv
           # Convert PNG to ICO with multiple sizes
-          magick convert src-tauri/icons/icon.png -define icon:auto-resize=256,128,64,48,32,16 src-tauri/icons/icon.ico
+          magick src-tauri/icons/icon.png -define icon:auto-resize=256,128,64,48,32,16 src-tauri/icons/icon.ico
+          # Verify icon was created
+          if (Test-Path src-tauri/icons/icon.ico) {
+            Write-Host "Icon created successfully"
+          } else {
+            Write-Error "Failed to create icon"
+          }
         shell: pwsh
 
       - name: Install frontend dependencies
