@@ -12,7 +12,6 @@ import {
 import { useProject } from '@/contexts/ProjectContext';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import NiceModal from '@ebay/nice-modal-react';
 import { OAuthDialog } from '@/components/dialogs/global/OAuthDialog';
 import { useUserSystem } from '@/components/ConfigProvider';
 import { oauthApi, projectsApi } from '@/lib/api';
@@ -68,7 +67,7 @@ export function Sidebar() {
   };
 
   const handleOpenOAuth = async () => {
-    const profile = await NiceModal.show(OAuthDialog);
+    const profile = await OAuthDialog.show();
     if (profile) {
       await reloadSystem();
     }
