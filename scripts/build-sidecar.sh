@@ -16,12 +16,12 @@ echo "Building sidecar for target: $TARGET"
 # Build the server in release mode
 if [ "$1" = "--release" ] || [ "$RELEASE" = "1" ]; then
     echo "Building in release mode..."
-    cargo build --release -p server --bin server
-    BINARY_PATH="$PROJECT_ROOT/target/release/server"
+    cargo build --release --target "$TARGET" -p server --bin server
+    BINARY_PATH="$PROJECT_ROOT/target/$TARGET/release/server"
 else
     echo "Building in debug mode..."
-    cargo build -p server --bin server
-    BINARY_PATH="$PROJECT_ROOT/target/debug/server"
+    cargo build --target "$TARGET" -p server --bin server
+    BINARY_PATH="$PROJECT_ROOT/target/$TARGET/debug/server"
 fi
 
 # Create binaries directory if it doesn't exist
