@@ -13,6 +13,11 @@ TARGET="${TARGET:-$(rustc -vV | grep host | cut -d' ' -f2)}"
 
 echo "Building sidecar for target: $TARGET"
 
+# Force OpenSSL to build from source (vendored)
+export OPENSSL_STATIC=1
+export OPENSSL_LIB_DIR=""
+export OPENSSL_INCLUDE_DIR=""
+
 # Build the server in release mode
 if [ "$1" = "--release" ] || [ "$RELEASE" = "1" ]; then
     echo "Building in release mode..."
